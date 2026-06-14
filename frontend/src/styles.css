@@ -105,6 +105,10 @@ button { font-family: inherit; cursor: pointer; }
 }
 .field input:focus, .field select:focus { outline: none; border-color: var(--green); }
 
+/* PIN fields: numeric keyboard (type=text + inputmode) but masked via CSS, so
+   iOS does not trigger password autofill (which stole focus on every keypress). */
+.pin-input { -webkit-text-security: disc; text-security: disc; letter-spacing: 0.3em; }
+
 .primary-btn {
   width: 100%; margin-top: 0.4rem;
   background: var(--green); color: #fff; border: none;

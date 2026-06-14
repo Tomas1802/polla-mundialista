@@ -67,10 +67,14 @@ export default function Login() {
             <label className="field">
               <span>Tu PIN</span>
               <input
-                type="password"
+                className="pin-input"
+                type="text"
                 inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                autoCorrect="off"
                 value={pin}
-                onChange={(e) => setPin(e.target.value)}
+                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
                 placeholder="••••"
                 maxLength={4}
                 required

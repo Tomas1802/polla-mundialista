@@ -44,13 +44,36 @@ export default function ChangePin() {
           </p>
           <label className="field">
             <span>Nuevo PIN (4 dígitos)</span>
-            <input type="password" inputMode="numeric" value={pin} maxLength={4}
-              onChange={(e) => setPin(e.target.value)} placeholder="••••" required autoFocus />
+            <input
+              className="pin-input"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              autoCorrect="off"
+              maxLength={4}
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="••••"
+              required
+              autoFocus
+            />
           </label>
           <label className="field">
             <span>Repite el PIN</span>
-            <input type="password" inputMode="numeric" value={pin2} maxLength={4}
-              onChange={(e) => setPin2(e.target.value)} placeholder="••••" required />
+            <input
+              className="pin-input"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="off"
+              autoCorrect="off"
+              maxLength={4}
+              value={pin2}
+              onChange={(e) => setPin2(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="••••"
+              required
+            />
           </label>
           {error && <p className="error">{error}</p>}
           <button className="primary-btn" disabled={busy}>

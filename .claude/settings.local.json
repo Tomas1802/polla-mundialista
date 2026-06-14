@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go version *)",
+      "Bash(npm --version)",
+      "PowerShell(go version *)",
+      "PowerShell(winget install *)",
+      "PowerShell($go = \"C:\\\\Program Files\\\\Go\\\\bin\\\\go.exe\"; if \\(Test-Path $go\\) { & $go version } else { Write-Output \"not yet at default path\"; Get-ChildItem \"C:\\\\Program Files\\\\Go\" -ErrorAction SilentlyContinue })",
+      "Bash(pdftotext -layout GRUPOS_Fase1_WilsonRicardo1.pdf -)"
+    ]
+  }
+}

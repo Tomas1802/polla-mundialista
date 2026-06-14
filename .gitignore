@@ -1,0 +1,30 @@
+# Backend (Go)
+/backend/bin/
+/backend/server
+*.exe
+*.test
+*.out
+
+# Frontend (Node)
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.vite/
+
+# Env & secrets — NEVER commit these
+.env
+.env.*
+!.env.example
+*-service-account.json
+*.pem
+*.key
+pins.csv
+
+# Cartón data (PDFs + extracted CSVs + PINs). Loaded into the DB locally; not
+# needed in the repo, and contains pool predictions — keep it out.
+/scores/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -6,7 +6,10 @@
       "PowerShell(go version *)",
       "PowerShell(winget install *)",
       "PowerShell($go = \"C:\\\\Program Files\\\\Go\\\\bin\\\\go.exe\"; if \\(Test-Path $go\\) { & $go version } else { Write-Output \"not yet at default path\"; Get-ChildItem \"C:\\\\Program Files\\\\Go\" -ErrorAction SilentlyContinue })",
-      "Bash(pdftotext -layout GRUPOS_Fase1_WilsonRicardo1.pdf -)"
+      "Bash(pdftotext -layout GRUPOS_Fase1_WilsonRicardo1.pdf -)",
+      "Bash(curl -s -m 30 https://tomas1802.github.io/polla-mundialista/)",
+      "Bash(curl -s -m 90 https://polla-mundialista-eclo.onrender.com/healthz -w '\\\\nHTTP %{http_code}\\\\n')",
+      "Bash(curl -s -m 60 -i -H 'Origin: https://tomas1802.github.io' https://polla-mundialista-eclo.onrender.com/api/players)"
     ]
   }
 }

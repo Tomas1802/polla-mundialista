@@ -7,12 +7,15 @@ import (
 	"polla/internal/auth"
 )
 
-// sessionDTO is the shape returned by /login and /me.
+// sessionDTO is the shape returned by /login and /me. Token is only set on
+// login/admin-login so the SPA can send it as a Bearer header (cookies are
+// blocked cross-site by iOS Safari).
 type sessionDTO struct {
 	IsAdmin       bool   `json:"isAdmin"`
 	PlayerID      *int64 `json:"playerId"`
 	PlayerName    string `json:"playerName"`
 	MustChangePin bool   `json:"mustChangePin"`
+	Token         string `json:"token,omitempty"`
 }
 
 type loginRequest struct {
@@ -49,7 +52,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	s.setSessionCookie(w, token)
 	id := player.ID
 	writeJSON(w, http.StatusOK, sessionDTO{
-		PlayerID: &id, PlayerName: player.Name, MustChangePin: player.MustChangePin,
+		PlayerID: &id, PlayerName: player.Name, MustChangePin: player.MustChangePin, Token: token,
 	})
 }
 
@@ -78,7 +81,7 @@ func (s *Server) handleAdminLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setSessionCookie(w, token)
-	writeJSON(w, http.StatusOK, sessionDTO{IsAdmin: true})
+	writeJSON(w, http.StatusOK, sessionDTO{IsAdmin: true, Token: token})
 }
 
 type changePinRequest struct {

@@ -1,20 +1,58 @@
-// Thin fetch wrapper. credentials:'include' sends the session cookie on every
-// request so the backend keeps the session across visits.
+// Thin fetch wrapper. The session token is kept in localStorage and sent as a
+// Bearer header (cookies are blocked cross-site by iOS Safari).
 const BASE = import.meta.env.VITE_API_BASE || ''
+const TOKEN_KEY = 'polla_token'
+
+export function getToken() {
+  try {
+    return localStorage.getItem(TOKEN_KEY) || ''
+  } catch {
+    return ''
+  }
+}
+
+export function setToken(token) {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token)
+    else localStorage.removeItem(TOKEN_KEY)
+  } catch {
+    // ignore storage errors (private mode, etc.)
+  }
+}
 
 async function request(path, options = {}) {
-  const res = await fetch(BASE + path, {
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    ...options,
-  })
+  const url = BASE + path
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
+  const token = getToken()
+  if (token) headers.Authorization = `Bearer ${token}`
+  let res
+  try {
+    res = await fetch(url, {
+      credentials: 'include',
+      ...options,
+      headers,
+    })
+  } catch (e) {
+    // Network / CORS / DNS failure (fetch threw before any response).
+    throw new Error(`No se pudo conectar a ${url} — ${e.name}: ${e.message}`)
+  }
   if (!res.ok) {
-    let message = 'Ocurrió un error. Intenta de nuevo.'
+    let bodyText = ''
     try {
-      const body = await res.json()
+      bodyText = await res.text()
+    } catch {
+      // ignore: no readable body
+    }
+    let message = ''
+    try {
+      const body = JSON.parse(bodyText)
       if (body && body.error) message = body.error
     } catch {
-      // non-JSON error body; keep the default message
+      // body was not JSON
+    }
+    if (!message) {
+      const snippet = bodyText ? ` — ${bodyText.slice(0, 300)}` : ''
+      message = `HTTP ${res.status} ${res.statusText} en ${url}${snippet}`
     }
     const err = new Error(message)
     err.status = res.status
@@ -27,13 +65,25 @@ async function request(path, options = {}) {
 export const api = {
   me: () => request('/api/me'),
   players: () => request('/api/players'),
-  login: (playerId, pin) =>
-    request('/api/auth/login', { method: 'POST', body: JSON.stringify({ playerId, pin }) }),
-  adminLogin: (pin) =>
-    request('/api/auth/admin-login', { method: 'POST', body: JSON.stringify({ pin }) }),
+  login: async (playerId, pin) => {
+    const data = await request('/api/auth/login', { method: 'POST', body: JSON.stringify({ playerId, pin }) })
+    if (data && data.token) setToken(data.token)
+    return data
+  },
+  adminLogin: async (pin) => {
+    const data = await request('/api/auth/admin-login', { method: 'POST', body: JSON.stringify({ pin }) })
+    if (data && data.token) setToken(data.token)
+    return data
+  },
   changePin: (newPin) =>
     request('/api/auth/change-pin', { method: 'POST', body: JSON.stringify({ newPin }) }),
-  logout: () => request('/api/auth/logout', { method: 'POST' }),
+  logout: async () => {
+    try {
+      await request('/api/auth/logout', { method: 'POST' })
+    } finally {
+      setToken('')
+    }
+  },
 
   cards: () => request('/api/cards'),
   matches: (cardId) => request(`/api/matches?cardId=${cardId}`),

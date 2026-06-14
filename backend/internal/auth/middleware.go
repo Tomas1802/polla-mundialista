@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 
 	"polla/internal/db"
 )
@@ -43,11 +44,18 @@ func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 }
 
 func (a *Authenticator) authenticate(r *http.Request) (Identity, error) {
-	cookie, err := r.Cookie(CookieName)
-	if err != nil {
-		return Identity{}, err
+	// Prefer the Authorization: Bearer header (works across sites without
+	// cookies, which iOS Safari blocks); fall back to the session cookie.
+	tokenStr := ""
+	if h := r.Header.Get("Authorization"); strings.HasPrefix(h, "Bearer ") {
+		tokenStr = strings.TrimSpace(strings.TrimPrefix(h, "Bearer "))
+	} else if cookie, err := r.Cookie(CookieName); err == nil {
+		tokenStr = cookie.Value
 	}
-	claims, err := a.Sessions.Parse(cookie.Value)
+	if tokenStr == "" {
+		return Identity{}, errors.New("no session token")
+	}
+	claims, err := a.Sessions.Parse(tokenStr)
 	if err != nil {
 		return Identity{}, err
 	}

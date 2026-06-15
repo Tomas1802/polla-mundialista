@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
+import Scorecard from '../components/Scorecard.jsx'
 
 export default function Ranking() {
   const [data, setData] = useState(null)
@@ -22,22 +23,53 @@ export default function Ranking() {
   return (
     <div className="ranking">
       <h2 className="ranking-title">Ranking por cartón</h2>
+      <p className="tablas-intro">Toca un cartón para ver sus marcadores y los puntos de cada partido.</p>
       <ol className="ranking-list">
         {ranking.map((e) => (
-          <li
-            key={e.cardId}
-            className={'ranking-row' + (e.playerId === mePlayerId ? ' me' : '')}
-          >
-            <span className="rank-pos">{e.rank}</span>
-            <span className="rank-name">
-              {e.playerName}
-              <span className="rank-card">{e.cardLabel}</span>
-              {e.playerId === mePlayerId && <span className="you-tag">Tú</span>}
-            </span>
-            <span className="rank-pts">{e.points} pts</span>
-          </li>
+          <RankingRow key={e.cardId} entry={e} isMe={e.playerId === mePlayerId} />
         ))}
       </ol>
     </div>
+  )
+}
+
+function RankingRow({ entry, isMe }) {
+  const [card, setCard] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function onToggle(ev) {
+    if (!ev.target.open || card || loading) return
+    setLoading(true)
+    setError('')
+    try {
+      setCard(await api.scorecard(entry.cardId))
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <li>
+      <details className={'rank-details' + (isMe ? ' me' : '')} onToggle={onToggle}>
+        <summary className="ranking-row">
+          <span className="rank-pos">{entry.rank}</span>
+          <span className="rank-name">
+            {entry.playerName}
+            <span className="rank-card">{entry.cardLabel}</span>
+            {isMe && <span className="you-tag">Tú</span>}
+          </span>
+          <span className="rank-pts">{entry.points} pts</span>
+          <span className="rank-caret" aria-hidden="true">▾</span>
+        </summary>
+        <div className="rank-panel">
+          {loading && <div className="spinner" />}
+          {error && <p className="error">{error}</p>}
+          {card && <Scorecard card={card} />}
+        </div>
+      </details>
+    </li>
   )
 }

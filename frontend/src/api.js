@@ -93,6 +93,7 @@ export const api = {
       body: JSON.stringify(body),
     }),
   ranking: () => request('/api/ranking'),
+  scorecard: (cardId) => request(`/api/cards/${cardId}/scorecard`),
   teams: () => request('/api/teams'),
   tables: (cardId) => request(`/api/tables?cardId=${cardId}`),
 

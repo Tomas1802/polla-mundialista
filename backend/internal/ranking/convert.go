@@ -67,6 +67,51 @@ func matchPoints(m model.Match, p model.CardPrediction) int {
 	}
 }
 
+// MatchOutcome scores a finished match for a card and returns the points plus a
+// short Spanish label of the rule that produced them. Returns (0, "") if the
+// match is not finished.
+func MatchOutcome(m model.Match, p model.CardPrediction) (int, string) {
+	if !m.Finished() {
+		return 0, ""
+	}
+	res := toResult(m)
+	pred := toPrediction(p)
+	var o scoring.Outcome
+	switch {
+	case model.IsGroupStage(m.Stage):
+		o = scoring.ScoreGroupMatchExplained(pred, res)
+	case model.IsFinal(m.Stage):
+		o = scoring.ScoreKnockoutMatchExplained(pred, res, scoring.FinalTiers)
+	default:
+		o = scoring.ScoreKnockoutMatchExplained(pred, res, scoring.KnockoutTiers)
+	}
+	return o.Points, ruleLabel(o.Rule)
+}
+
+// ruleLabel maps a scoring rule to a short Spanish description for the UI.
+func ruleLabel(r scoring.Rule) string {
+	switch r {
+	case scoring.RuleExact:
+		return "Marcador exacto"
+	case scoring.RuleReversed:
+		return "Exacto pero al revés"
+	case scoring.RuleWinner:
+		return "Ganador acertado"
+	case scoring.RuleDraw:
+		return "Empate acertado"
+	case scoring.RuleExactAdv:
+		return "Exacto y clasificado"
+	case scoring.RuleExactNoAdv:
+		return "Exacto, otro clasificó"
+	case scoring.RuleAdv:
+		return "Clasificado acertado"
+	case scoring.RuleWrong:
+		return "Resultado incorrecto"
+	default:
+		return "Sin pronóstico"
+	}
+}
+
 // isExactScore reports whether a prediction nailed the exact marcador (the
 // ranking tie-breaker).
 func isExactScore(m model.Match, p model.CardPrediction) bool {

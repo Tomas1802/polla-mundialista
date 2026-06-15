@@ -217,7 +217,7 @@ func (s *Server) handlePutPrediction(w http.ResponseWriter, r *http.Request) {
 	}
 	lock := time.Duration(s.cfg.LockOffsetMinutes) * time.Minute
 	if m.Started() || !time.Now().Before(m.UTCDate.Add(-lock)) {
-		writeError(w, http.StatusConflict, "Este partido ya comenzó; el marcador quedó cerrado.")
+		writeError(w, http.StatusConflict, "El marcador se cierra 5 minutos antes del partido.")
 		return
 	}
 	if !validScore(req.Home) || !validScore(req.Away) {

@@ -54,7 +54,7 @@ func Load() (Config, error) {
 		AdminPin:            os.Getenv("ADMIN_PIN"),
 		AllowedOrigin:       getenv("ALLOWED_ORIGIN", "http://localhost:5173"),
 		SessionTTL:          getdur("SESSION_TTL", 365*24*time.Hour),
-		LockOffsetMinutes:   getint("LOCK_OFFSET_MINUTES", 0),
+		LockOffsetMinutes:   getint("LOCK_OFFSET_MINUTES", 5),
 		CookieSecure:        getbool("COOKIE_SECURE", false),
 		SyncIntervalMinutes: getint("SYNC_INTERVAL_MINUTES", 10),
 		ScoresDir:           getenv("SCORES_DIR", "../scores"),

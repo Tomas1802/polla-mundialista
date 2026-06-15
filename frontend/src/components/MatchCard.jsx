@@ -30,6 +30,9 @@ export default function MatchCard({ match, cardId }) {
   const [status, setStatus] = useState('')
 
   const finished = match.status === 'FINISHED'
+  const live = match.status === 'IN_PLAY' || match.status === 'PAUSED'
+  const hasReal = match.scoreHome != null && match.scoreAway != null
+  const realLabel = finished ? 'Resultado real' : live ? 'En vivo' : 'Resultado'
   const isDrawPred = home != null && away != null && home === away
   const showPenalty = editable && match.knockout && isDrawPred
 
@@ -122,9 +125,18 @@ export default function MatchCard({ match, cardId }) {
         </p>
       )}
 
-      {finished && (
+      {hasReal && (
         <div className="match-result">
-          <span>Resultado real: <strong>{match.scoreHome}–{match.scoreAway}</strong></span>
+          <div className="result-compare">
+            <span className="result-line">
+              <span className="result-tag">Tu pronóstico</span>
+              <strong>{(home ?? '–')}–{(away ?? '–')}</strong>
+            </span>
+            <span className={'result-line' + (live ? ' result-live' : '')}>
+              <span className="result-tag">{realLabel}</span>
+              <strong>{match.scoreHome}–{match.scoreAway}</strong>
+            </span>
+          </div>
           {match.points != null && <span className="points-badge">+{match.points} pts</span>}
         </div>
       )}

@@ -216,6 +216,18 @@ button { font-family: inherit; cursor: pointer; }
 .you-tag { background: var(--green); color: #fff; font-size: 0.75rem; padding: 0.1rem 0.5rem; border-radius: 999px; }
 .rank-pts { font-weight: 800; }
 
+/* ── Equipos ────────────────────────────────────────────────────────────── */
+.team-block { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 0.8rem; overflow: hidden; }
+.team-block.me { border-color: var(--green); box-shadow: 0 0 0 2px var(--green-light); }
+.team-head { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; background: var(--green-light); }
+.team-rank { font-size: 1.3rem; font-weight: 800; color: var(--green); min-width: 1.5ch; text-align: center; }
+.team-head .team-name { flex: 1; font-weight: 800; font-size: 1.1rem; }
+.team-points { font-weight: 800; color: var(--green-dark); }
+.team-members { list-style: none; margin: 0; padding: 0.3rem 1rem 0.6rem; }
+.team-members li { display: flex; justify-content: space-between; padding: 0.3rem 0; border-bottom: 1px solid var(--line); }
+.team-members li:last-child { border-bottom: none; }
+.member-points { font-weight: 700; color: var(--muted); }
+
 /* ── Misc ───────────────────────────────────────────────────────────────── */
 .error { color: var(--danger); font-weight: 700; }
 .page-error { padding: 1rem; }
@@ -246,6 +258,27 @@ button { font-family: inherit; cursor: pointer; }
 .admin-dash { font-weight: 800; }
 .admin-save-row { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.7rem; }
 .admin-save-btn { width: auto; padding: 0.6rem 1.2rem; margin-top: 0; }
+
+/* Admin score-fixer rows */
+.fix-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; padding: 0.4rem 0; border-bottom: 1px solid var(--line); }
+.fix-teams { flex: 1 1 100%; font-weight: 700; }
+.fix-teams .vs { color: var(--muted); font-weight: 400; }
+.fix-save { border: 2px solid var(--green); background: #fff; color: var(--green); border-radius: 10px; padding: 0.45rem 0.9rem; font-weight: 700; }
+.fix-save:active { background: var(--green-light); }
+.fix-real { color: var(--muted); font-size: 0.9rem; }
+
+/* Nested collapsibles: player → cartón → editor */
+.player-block { background: var(--card); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 0.6rem; overflow: hidden; }
+.player-block > summary { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding: 0.8rem 1rem; font-weight: 800; cursor: pointer; list-style: none; }
+.player-block > summary::-webkit-details-marker { display: none; }
+.player-block[open] > summary { border-bottom: 1px solid var(--line); }
+.player-block-count { color: var(--muted); font-weight: 600; font-size: 0.9rem; }
+.player-block-body { padding: 0.5rem 0.8rem 0.8rem; }
+.carton-block { border: 1px solid var(--line); border-radius: 10px; margin-top: 0.5rem; overflow: hidden; }
+.carton-block > summary { padding: 0.6rem 0.8rem; font-weight: 700; color: var(--green-dark); cursor: pointer; list-style: none; }
+.carton-block > summary::-webkit-details-marker { display: none; }
+.carton-block[open] > summary { background: var(--green-light); }
+.carton-block-body { padding: 0.3rem 0.8rem 0.6rem; }
 
 /* ── Card selector ──────────────────────────────────────────────────────── */
 .card-selector { margin-bottom: 1rem; }

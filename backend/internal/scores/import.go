@@ -97,12 +97,60 @@ func Import(ctx context.Context, store *db.DB, dir string) (Result, error) {
 		}
 	}
 
+	// Assign pool teams from teams.csv (optional).
+	if err := importTeams(ctx, store, filepath.Join(dir, "teams.csv")); err != nil {
+		return res, fmt.Errorf("asignar equipos: %w", err)
+	}
+
 	players, err := store.ListPlayers(ctx)
 	if err != nil {
 		return res, err
 	}
 	res.Players = len(players)
 	return res, nil
+}
+
+// importTeams reads "equipo,jugador" rows and links players to pool teams.
+// Missing file → no-op (teams are optional).
+func importTeams(ctx context.Context, store *db.DB, path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil // no teams.csv
+	}
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	r.FieldsPerRecord = -1
+	records, err := r.ReadAll()
+	if err != nil {
+		return err
+	}
+	if err := store.ClearTeamAssignments(ctx); err != nil {
+		return err
+	}
+	teamIDs := map[string]int64{}
+	for _, rec := range records {
+		if len(rec) < 2 {
+			continue
+		}
+		team := strings.TrimSpace(rec[0])
+		player := strings.TrimSpace(rec[1])
+		if team == "" || player == "" || strings.EqualFold(team, "equipo") {
+			continue // header or blank
+		}
+		id, ok := teamIDs[team]
+		if !ok {
+			id, err = store.UpsertPoolTeam(ctx, team)
+			if err != nil {
+				return err
+			}
+			teamIDs[team] = id
+		}
+		if _, err := store.AssignPlayerToTeam(ctx, player, id); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // loadSchedule reads "numero,matchId" rows into a map.

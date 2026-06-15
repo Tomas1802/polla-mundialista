@@ -9,7 +9,8 @@
       "Bash(pdftotext -layout GRUPOS_Fase1_WilsonRicardo1.pdf -)",
       "Bash(curl -s -m 30 https://tomas1802.github.io/polla-mundialista/)",
       "Bash(curl -s -m 90 https://polla-mundialista-eclo.onrender.com/healthz -w '\\\\nHTTP %{http_code}\\\\n')",
-      "Bash(curl -s -m 60 -i -H 'Origin: https://tomas1802.github.io' https://polla-mundialista-eclo.onrender.com/api/players)"
+      "Bash(curl -s -m 60 -i -H 'Origin: https://tomas1802.github.io' https://polla-mundialista-eclo.onrender.com/api/players)",
+      "Bash(curl -s -m 5 http://localhost:8090/healthz)"
     ]
   }
 }

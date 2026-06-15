@@ -56,8 +56,11 @@ func (s *Server) Handler() http.Handler {
 	protected.HandleFunc("GET /api/matches", s.handleMatches)
 	protected.HandleFunc("PUT /api/cards/{cardId}/predictions/{matchId}", s.handlePutPrediction)
 	protected.HandleFunc("GET /api/ranking", s.handleRanking)
+	protected.HandleFunc("GET /api/teams", s.handleTeams)
 	protected.HandleFunc("GET /api/tables", s.handleTables)
 	protected.HandleFunc("GET /api/admin/players", s.handleAdminPlayers)
+	protected.HandleFunc("GET /api/admin/cards", s.handleAdminCards)
+	protected.HandleFunc("PUT /api/admin/cards/{cardId}/predictions/{matchId}", s.handleAdminEditPrediction)
 	protected.HandleFunc("POST /api/admin/import-scores", s.handleAdminImportScores)
 	mux.Handle("/api/", s.authn.Middleware(protected))
 

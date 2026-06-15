@@ -93,8 +93,15 @@ export const api = {
       body: JSON.stringify(body),
     }),
   ranking: () => request('/api/ranking'),
+  teams: () => request('/api/teams'),
   tables: (cardId) => request(`/api/tables?cardId=${cardId}`),
 
   adminPlayers: () => request('/api/admin/players'),
+  adminCards: () => request('/api/admin/cards'),
+  adminEditPrediction: (cardId, matchId, body) =>
+    request(`/api/admin/cards/${cardId}/predictions/${matchId}`, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
   adminImport: () => request('/api/admin/import-scores', { method: 'POST' }),
 }

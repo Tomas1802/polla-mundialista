@@ -22,6 +22,22 @@ func (s *Server) handleRanking(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// handleTeams returns the team ranking (sum of each member's best card) plus
+// the players with no team.
+func (s *Server) handleTeams(w http.ResponseWriter, r *http.Request) {
+	id, _ := auth.IdentityFrom(r.Context())
+	teams, sinEquipo, err := s.ranking.TeamStandings(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "No pudimos calcular los equipos.")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"teams":     teams,
+		"sinEquipo": sinEquipo,
+		"mePlayerId": id.PlayerID,
+	})
+}
+
 // handleTables returns the real-vs-predicted group tables for a given card.
 func (s *Server) handleTables(w http.ResponseWriter, r *http.Request) {
 	cardID, err := strconv.ParseInt(r.URL.Query().Get("cardId"), 10, 64)

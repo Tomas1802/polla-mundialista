@@ -7,12 +7,14 @@ import CardSelector from './components/CardSelector.jsx'
 import Marcadores from './pages/Marcadores.jsx'
 import Tablas from './pages/Tablas.jsx'
 import Ranking from './pages/Ranking.jsx'
+import Equipos from './pages/Equipos.jsx'
 import Admin from './pages/Admin.jsx'
 
 const BASE_TABS = [
   { id: 'marcadores', label: 'Marcadores', icon: '⚽' },
   { id: 'tablas', label: 'Tablas', icon: '📊' },
   { id: 'ranking', label: 'Ranking', icon: '🏆' },
+  { id: 'equipos', label: 'Equipos', icon: '👥' },
 ]
 const ADMIN_TAB = { id: 'admin', label: 'Admin', icon: '🔧' }
 
@@ -48,7 +50,10 @@ export default function App() {
   if (!user) return <Login />
   if (user.playerId && user.mustChangePin) return <ChangePin />
 
-  const tabs = user.isAdmin ? [...BASE_TABS, ADMIN_TAB] : BASE_TABS
+  // The admin account does not play: it only sees Ranking, Equipos and Admin.
+  const tabs = user.isAdmin
+    ? [...BASE_TABS.filter((t) => t.id === 'ranking' || t.id === 'equipos'), ADMIN_TAB]
+    : BASE_TABS
   const showCardSelector = (tab === 'marcadores' || tab === 'tablas') && cards && cards.length > 1
   const noCard = (tab === 'marcadores' || tab === 'tablas') && !cardId
 
@@ -73,7 +78,8 @@ export default function App() {
         {tab === 'marcadores' && cardId && <Marcadores cardId={cardId} />}
         {tab === 'tablas' && cardId && <Tablas cardId={cardId} />}
         {tab === 'ranking' && <Ranking />}
-        {tab === 'admin' && user.isAdmin && <Admin onImported={loadCards} />}
+        {tab === 'equipos' && <Equipos />}
+        {tab === 'admin' && user.isAdmin && <Admin />}
       </main>
 
       <nav className="tabbar" aria-label="Secciones">

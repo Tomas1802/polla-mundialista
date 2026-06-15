@@ -1,9 +1,12 @@
 package api
 
 import (
+	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"polla/internal/auth"
+	"polla/internal/model"
 	"polla/internal/scores"
 )
 
@@ -47,6 +50,67 @@ func (s *Server) handleAdminPlayers(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"players": out})
+}
+
+// handleAdminCards lists every card (player + label) for the correction picker.
+func (s *Server) handleAdminCards(w http.ResponseWriter, r *http.Request) {
+	if !s.requireAdmin(w, r) {
+		return
+	}
+	cards, err := s.store.ListCardsWithPlayer(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "No pudimos cargar los cartones.")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"cards": cards})
+}
+
+// handleAdminEditPrediction lets the admin correct any card's marcador,
+// including already-played matches (no kickoff lock). Admin only.
+func (s *Server) handleAdminEditPrediction(w http.ResponseWriter, r *http.Request) {
+	if !s.requireAdmin(w, r) {
+		return
+	}
+	cardID, err := strconv.ParseInt(r.PathValue("cardId"), 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Cartón inválido.")
+		return
+	}
+	matchID, err := strconv.ParseInt(r.PathValue("matchId"), 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "Partido inválido.")
+		return
+	}
+	var req putPredictionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Solicitud inválida.")
+		return
+	}
+	if !validScore(req.Home) || !validScore(req.Away) {
+		writeError(w, http.StatusBadRequest, "El marcador debe estar entre 0 y 99.")
+		return
+	}
+	m, err := s.store.GetMatch(r.Context(), matchID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "Partido no encontrado.")
+		return
+	}
+	penaltyWinner := ""
+	if !model.IsGroupStage(m.Stage) && (req.PenaltyWinner == "HOME" || req.PenaltyWinner == "AWAY") {
+		penaltyWinner = req.PenaltyWinner
+	}
+	if err := s.store.UpsertCardPrediction(r.Context(), model.CardPrediction{
+		CardID:        cardID,
+		MatchID:       matchID,
+		Home:          req.Home,
+		Away:          req.Away,
+		PenaltyWinner: penaltyWinner,
+	}); err != nil {
+		s.log.Error("admin edit prediction failed", "err", err)
+		writeError(w, http.StatusInternalServerError, "No pudimos guardar el marcador.")
+		return
+	}
+	writeJSON(w, http.StatusOK, predictionDTO{Home: req.Home, Away: req.Away, PenaltyWinner: penaltyWinner})
 }
 
 // handleAdminImportScores imports the cartón CSV files (admin only).

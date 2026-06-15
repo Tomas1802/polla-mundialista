@@ -140,6 +140,35 @@ func (d *DB) ListAllCards(ctx context.Context) ([]model.Card, error) {
 	return scanCards(rows)
 }
 
+// CardWithPlayer is a card plus its owner's name (for the admin card picker).
+type CardWithPlayer struct {
+	CardID     int64  `json:"id"`
+	CardNo     int    `json:"cardNo"`
+	Label      string `json:"label"`
+	PlayerName string `json:"playerName"`
+}
+
+// ListCardsWithPlayer returns every card with its player's name, ordered.
+func (d *DB) ListCardsWithPlayer(ctx context.Context) ([]CardWithPlayer, error) {
+	rows, err := d.Pool.Query(ctx, `
+		SELECT c.id, c.card_no, c.label, p.name
+		FROM cards c JOIN players p ON p.id = c.player_id
+		ORDER BY p.name, c.card_no`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []CardWithPlayer
+	for rows.Next() {
+		var c CardWithPlayer
+		if err := rows.Scan(&c.CardID, &c.CardNo, &c.Label, &c.PlayerName); err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
 // GetCard returns a single card (for ownership checks).
 func (d *DB) GetCard(ctx context.Context, id int64) (model.Card, error) {
 	var c model.Card

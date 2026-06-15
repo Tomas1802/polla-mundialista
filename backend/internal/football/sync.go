@@ -81,8 +81,19 @@ func (s *Service) Tick(ctx context.Context) error {
 	if state.NextMatchUTC != nil && !now.Before(*state.NextMatchUTC) {
 		return s.FullSync(ctx)
 	}
+	// While any match is live (or just finished but not yet captured), keep
+	// polling so final results land within minutes rather than waiting for the
+	// following match's kickoff. Bounded by minPollGap to limit API calls.
+	if now.Sub(*state.LastFullSyncAt) >= minPollGap {
+		if live, err := s.store.HasLiveMatches(ctx, now); err == nil && live {
+			return s.FullSync(ctx)
+		}
+	}
 	return nil
 }
+
+// minPollGap is the shortest interval between syncs while matches are live.
+const minPollGap = 5 * time.Minute
 
 // Run performs an initial Tick and then re-checks on the given interval until
 // the context is cancelled. The interval only governs how often we *check*; the

@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"polla/internal/model"
 )
@@ -82,6 +83,23 @@ func (d *DB) ListMatches(ctx context.Context) ([]model.Match, error) {
 		out = append(out, m)
 	}
 	return out, rows.Err()
+}
+
+// HasLiveMatches reports whether any match kicked off within the last few hours
+// but is not yet recorded as FINISHED in our cache. While true, the sync policy
+// keeps polling so final results are captured promptly instead of waiting for
+// the next match's kickoff. Manually-set results are ignored (no need to poll).
+func (d *DB) HasLiveMatches(ctx context.Context, now time.Time) (bool, error) {
+	var exists bool
+	err := d.Pool.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM matches
+			WHERE status <> 'FINISHED'
+			  AND result_manual = false
+			  AND utc_date <= $1
+			  AND utc_date >= $1 - INTERVAL '4 hours'
+		)`, now).Scan(&exists)
+	return exists, err
 }
 
 // GetMatch returns a single match by id.

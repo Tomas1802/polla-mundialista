@@ -97,6 +97,9 @@ export const api = {
   tables: (cardId) => request(`/api/tables?cardId=${cardId}`),
 
   adminPlayers: () => request('/api/admin/players'),
+  adminSettings: () => request('/api/admin/settings'),
+  adminSetSettings: (matchId) =>
+    request('/api/admin/settings', { method: 'PUT', body: JSON.stringify({ editLockUntilMatchId: matchId }) }),
   adminCards: () => request('/api/admin/cards'),
   adminEditPrediction: (cardId, matchId, body) =>
     request(`/api/admin/cards/${cardId}/predictions/${matchId}`, {

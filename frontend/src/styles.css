@@ -156,6 +156,7 @@ button { font-family: inherit; cursor: pointer; }
 .badge-open { background: var(--green-light); color: var(--green-dark); }
 .badge-closed { background: #eee; color: var(--muted); }
 .badge-final { background: #fff2cc; color: #8a6d00; }
+.badge-locked { background: #fde6c8; color: #8a4b00; }
 
 .team-row { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.45rem 0; }
 .team-id { display: flex; align-items: center; gap: 0.6rem; min-width: 0; }
@@ -280,15 +281,19 @@ button { font-family: inherit; cursor: pointer; }
 .carton-block[open] > summary { background: var(--green-light); }
 .carton-block-body { padding: 0.3rem 0.8rem 0.6rem; }
 
-/* ── Card selector ──────────────────────────────────────────────────────── */
-.card-selector { margin-bottom: 1rem; }
-.card-selector-label { font-weight: 700; color: var(--muted); display: block; margin-bottom: 0.4rem; }
-.card-chips { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.card-chip {
-  border: 2px solid var(--line); background: #fff; color: var(--ink);
-  border-radius: 999px; padding: 0.5rem 1rem; font-size: 1rem; font-weight: 700;
+/* ── Card tabs (switch between a player's cartones) ─────────────────────── */
+.card-tabs {
+  display: flex; gap: 0.3rem; margin-bottom: 1rem;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 0.3rem;
 }
-.card-chip.active { border-color: var(--green); background: var(--green-light); color: var(--green-dark); }
+.card-tab {
+  flex: 1; border: none; background: none; border-radius: 9px;
+  padding: 0.5rem 0.3rem; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  color: var(--muted); font-weight: 700;
+}
+.card-tab.active { background: var(--green); color: #fff; }
+.card-tab-label { font-size: 1rem; }
+.card-tab-sub { font-size: 0.78rem; font-weight: 600; opacity: 0.9; }
 .rank-card { color: var(--muted); font-weight: 600; font-size: 0.9rem; margin-left: 0.4rem; }
 .pin-value { font-size: 1.3rem; letter-spacing: 0.15em; color: var(--green-dark); font-weight: 800; }
 .pin-changed { color: var(--muted); font-weight: 600; }

@@ -4,11 +4,77 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
 	"polla/internal/auth"
 	"polla/internal/model"
 	"polla/internal/scores"
 )
+
+type settingsMatchDTO struct {
+	ID      int64     `json:"id"`
+	Seq     int       `json:"seq"`
+	Home    string    `json:"home"`
+	Away    string    `json:"away"`
+	UTCDate time.Time `json:"utcDate"`
+	Group   string    `json:"group"`
+}
+
+// handleAdminGetSettings returns the current edit-lock cutoff and the list of
+// matches (chronological) for the admin to pick from.
+func (s *Server) handleAdminGetSettings(w http.ResponseWriter, r *http.Request) {
+	if !s.requireAdmin(w, r) {
+		return
+	}
+	lockID, err := s.store.GetEditLockMatchID(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "No pudimos cargar los ajustes.")
+		return
+	}
+	matches, err := s.store.ListMatches(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "No pudimos cargar los partidos.")
+		return
+	}
+	out := make([]settingsMatchDTO, 0, len(matches))
+	for _, m := range matches {
+		out = append(out, settingsMatchDTO{
+			ID: m.ID, Seq: m.Seq, Home: m.HomeTeamName, Away: m.AwayTeamName,
+			UTCDate: m.UTCDate, Group: m.GroupLetter,
+		})
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"editLockUntilMatchId": lockID,
+		"matches":              out,
+	})
+}
+
+type adminSettingsRequest struct {
+	EditLockUntilMatchID *int64 `json:"editLockUntilMatchId"`
+}
+
+// handleAdminSetSettings sets (or clears) the edit-lock cutoff match.
+func (s *Server) handleAdminSetSettings(w http.ResponseWriter, r *http.Request) {
+	if !s.requireAdmin(w, r) {
+		return
+	}
+	var req adminSettingsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "Solicitud inválida.")
+		return
+	}
+	if req.EditLockUntilMatchID != nil {
+		if _, err := s.store.GetMatch(r.Context(), *req.EditLockUntilMatchID); err != nil {
+			writeError(w, http.StatusBadRequest, "Partido inválido.")
+			return
+		}
+	}
+	if err := s.store.SetEditLockMatchID(r.Context(), req.EditLockUntilMatchID); err != nil {
+		writeError(w, http.StatusInternalServerError, "No pudimos guardar el ajuste.")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
 
 // requireAdmin returns true if the requester is the master admin (else 403).
 func (s *Server) requireAdmin(w http.ResponseWriter, r *http.Request) bool {

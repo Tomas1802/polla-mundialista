@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -10,6 +11,20 @@ import (
 	"polla/internal/model"
 	"polla/internal/ranking"
 )
+
+// editLockCutoffSeq returns the chronological seq up to and including which
+// matches are temporarily not editable, and whether a lock is configured.
+func (s *Server) editLockCutoffSeq(ctx context.Context) (int, bool) {
+	lockID, err := s.store.GetEditLockMatchID(ctx)
+	if err != nil || lockID == nil {
+		return -1, false
+	}
+	m, err := s.store.GetMatch(ctx, *lockID)
+	if err != nil {
+		return -1, false
+	}
+	return m.Seq, true
+}
 
 type predictionDTO struct {
 	Home          *int   `json:"home"`
@@ -33,6 +48,7 @@ type matchDTO struct {
 	Duration     string         `json:"duration"`
 	Knockout     bool           `json:"knockout"`
 	Editable     bool           `json:"editable"`
+	TempLocked   bool           `json:"tempLocked"`
 	Active       bool           `json:"active"`
 	Prediction   *predictionDTO `json:"prediction"`
 	Points       *int           `json:"points"`
@@ -97,6 +113,7 @@ func (s *Server) handleMatches(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 	lock := time.Duration(s.cfg.LockOffsetMinutes) * time.Minute
+	cutoffSeq, locked := s.editLockCutoffSeq(ctx)
 
 	var activeID *int64
 	for _, m := range matches {
@@ -126,9 +143,10 @@ func (s *Server) handleMatches(w http.ResponseWriter, r *http.Request) {
 			Winner:       m.Winner,
 			Duration:     m.Duration,
 			Knockout:     !model.IsGroupStage(m.Stage),
-			Editable:     now.Before(m.UTCDate.Add(-lock)) && !m.Started(),
 			Active:       activeID != nil && *activeID == m.ID,
 		}
+		dto.TempLocked = locked && m.Seq <= cutoffSeq
+		dto.Editable = now.Before(m.UTCDate.Add(-lock)) && !m.Started() && !dto.TempLocked
 		if m.HomeTeamID != nil {
 			dto.HomeCrest = teams[*m.HomeTeamID].CrestURL
 		}
@@ -191,6 +209,10 @@ func (s *Server) handlePutPrediction(w http.ResponseWriter, r *http.Request) {
 	m, err := s.store.GetMatch(r.Context(), matchID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Partido no encontrado.")
+		return
+	}
+	if cutoffSeq, locked := s.editLockCutoffSeq(r.Context()); locked && m.Seq <= cutoffSeq {
+		writeError(w, http.StatusConflict, "Este partido está temporalmente no editable.")
 		return
 	}
 	lock := time.Duration(s.cfg.LockOffsetMinutes) * time.Minute

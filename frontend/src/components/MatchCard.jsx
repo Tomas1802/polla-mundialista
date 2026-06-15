@@ -72,7 +72,8 @@ export default function MatchCard({ match, cardId }) {
 
       <div className="match-badge-row">
         {match.active && <span className="badge badge-active">Partido actual</span>}
-        {!finished && (editable
+        {!finished && match.tempLocked && <span className="badge badge-locked">Temporalmente no editable</span>}
+        {!finished && !match.tempLocked && (editable
           ? <span className="badge badge-open">Puedes editar</span>
           : <span className="badge badge-closed">Cerrado</span>)}
         {finished && <span className="badge badge-final">Finalizado</span>}

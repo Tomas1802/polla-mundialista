@@ -10,7 +10,8 @@
       "Bash(curl -s -m 30 https://tomas1802.github.io/polla-mundialista/)",
       "Bash(curl -s -m 90 https://polla-mundialista-eclo.onrender.com/healthz -w '\\\\nHTTP %{http_code}\\\\n')",
       "Bash(curl -s -m 60 -i -H 'Origin: https://tomas1802.github.io' https://polla-mundialista-eclo.onrender.com/api/players)",
-      "Bash(curl -s -m 5 http://localhost:8090/healthz)"
+      "Bash(curl -s -m 5 http://localhost:8090/healthz)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);const m=j.matches.find\\(x=>x.id===j.editLockUntilMatchId\\);console.log\\('editLockUntilMatchId:',j.editLockUntilMatchId, m?\\('\\('+m.home+' vs '+m.away+', seq '+m.seq+'\\)'\\):''\\);}\\);\")"
     ]
   }
 }

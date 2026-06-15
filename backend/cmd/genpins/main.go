@@ -1,15 +1,15 @@
-// Command genpins assigns a fresh random 4-digit PIN to every player and writes
-// a CSV (Jugador,PIN) for the organizer to hand out. The plaintext PINs live
-// ONLY in that CSV; the database stores just the bcrypt hash, and each player is
-// forced to change their PIN on first login.
+// Command genpins assigns a random 4-digit PIN to every player that does NOT
+// already have one, and writes the newly-generated ones to a CSV (Jugador,PIN)
+// for the organizer to hand out. Players who already have a PIN are left
+// untouched, so it is safe to re-run when new players are added.
 //
-// Usage (from the backend/ folder, with the DB running and cartones imported):
+// The plaintext PINs live ONLY in that CSV (and stdout); the database stores
+// just the bcrypt hash, and each player must change their PIN on first login.
 //
-//	go run ./cmd/genpins            # writes pins.csv
-//	go run ./cmd/genpins out.csv    # writes out.csv
+// Usage (from the backend/ folder, with DATABASE_URL set to the target DB):
 //
-// WARNING: this resets EVERY player's PIN. Run it once at setup (or again only
-// if you intend to reissue all PINs).
+//	go run ./cmd/genpins                 # writes pins_nuevos.csv
+//	go run ./cmd/genpins salida.csv      # writes salida.csv
 package main
 
 import (
@@ -47,26 +47,17 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if len(players) == 0 {
-		return fmt.Errorf("no hay jugadores; importa los cartones primero (pestaña Admin)")
-	}
 
-	outPath := "pins.csv"
-	if len(os.Args) > 1 {
-		outPath = os.Args[1]
-	}
-	f, err := os.Create(outPath)
-	if err != nil {
-		return fmt.Errorf("crear %s: %w", outPath, err)
-	}
-	defer f.Close()
-
-	w := csv.NewWriter(f)
-	if err := w.Write([]string{"Jugador", "PIN"}); err != nil {
-		return err
-	}
-
+	type pinned struct{ name, pin string }
+	var generated []pinned
 	for _, p := range players {
+		full, err := database.GetPlayer(ctx, p.ID)
+		if err != nil {
+			return err
+		}
+		if full.PinHash != "" {
+			continue // already has a PIN — leave it untouched
+		}
 		pin, err := auth.GeneratePin()
 		if err != nil {
 			return err
@@ -78,7 +69,29 @@ func run() error {
 		if err := database.SetPlayerPin(ctx, p.ID, hash); err != nil {
 			return fmt.Errorf("guardar PIN de %s: %w", p.Name, err)
 		}
-		if err := w.Write([]string{p.Name, pin}); err != nil {
+		generated = append(generated, pinned{p.Name, pin})
+		fmt.Printf("PIN nuevo: %s = %s\n", p.Name, pin)
+	}
+
+	if len(generated) == 0 {
+		fmt.Println("Todos los jugadores ya tienen PIN; nada que generar.")
+		return nil
+	}
+
+	outPath := "pins_nuevos.csv"
+	if len(os.Args) > 1 {
+		outPath = os.Args[1]
+	}
+	f, err := os.Create(outPath)
+	if err != nil {
+		return fmt.Errorf("crear %s: %w", outPath, err)
+	}
+	defer f.Close()
+
+	w := csv.NewWriter(f)
+	_ = w.Write([]string{"Jugador", "PIN"})
+	for _, g := range generated {
+		if err := w.Write([]string{g.name, g.pin}); err != nil {
 			return err
 		}
 	}
@@ -88,6 +101,6 @@ func run() error {
 	}
 
 	abs, _ := filepath.Abs(outPath)
-	fmt.Printf("Generados %d PINs.\nArchivo para entregar al admin: %s\n", len(players), abs)
+	fmt.Printf("Generados %d PIN(s) nuevo(s). Archivo: %s\n", len(generated), abs)
 	return nil
 }

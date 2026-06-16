@@ -28,7 +28,8 @@ export default function PlayersCards() {
     <section className="admin-section">
       <h2>Jugadores y cartones ({players.length})</h2>
       <p className="tablas-intro">
-        Abre un jugador, luego un cartón, y corrige cualquier marcador (incluidos los ya jugados).
+        Abre un jugador, luego un cartón, y corrige los marcadores. Solo se pueden
+        editar partidos que aún no han comenzado.
       </p>
       {players.map((p) => (
         <details key={p.name} className="player-block">
@@ -72,10 +73,17 @@ function CartonBlock({ card }) {
   )
 }
 
+const STARTED_STATUSES = new Set(['IN_PLAY', 'PAUSED', 'FINISHED', 'SUSPENDED', 'AWARDED'])
+
 function FixRow({ cardId, match }) {
   const [home, setHome] = useState(match.prediction?.home ?? '')
   const [away, setAway] = useState(match.prediction?.away ?? '')
   const [status, setStatus] = useState('')
+
+  // The pool is validated: matches already started or whose kickoff has passed
+  // can no longer be edited (mirrors the backend rule).
+  const kickoffPassed = new Date(match.utcDate).getTime() <= Date.now()
+  const locked = STARTED_STATUSES.has(match.status) || kickoffPassed
 
   async function save() {
     setStatus('saving')
@@ -92,6 +100,21 @@ function FixRow({ cardId, match }) {
     }
   }
 
+  if (locked) {
+    const pred = match.prediction
+    const predText = pred && pred.home != null ? `${pred.home}–${pred.away}` : 'sin marcador'
+    return (
+      <div className="fix-row fix-row-locked">
+        <span className="fix-teams">{match.homeTeamName} <span className="vs">vs</span> {match.awayTeamName}</span>
+        <span className="fix-pred">Pronóstico: <strong>{predText}</strong></span>
+        {match.status === 'FINISHED' && (
+          <span className="fix-real">real {match.scoreHome}–{match.scoreAway}</span>
+        )}
+        <span className="badge badge-locked">No editable</span>
+      </div>
+    )
+  }
+
   return (
     <div className="fix-row">
       <span className="fix-teams">{match.homeTeamName} <span className="vs">vs</span> {match.awayTeamName}</span>
@@ -101,9 +124,6 @@ function FixRow({ cardId, match }) {
       <input className="admin-score" type="number" min="0" max="99" value={away}
         onChange={(e) => setAway(e.target.value)} />
       <button className="fix-save" onClick={save} disabled={status === 'saving'}>Guardar</button>
-      {match.status === 'FINISHED' && (
-        <span className="fix-real">real {match.scoreHome}–{match.scoreAway}</span>
-      )}
       {status === 'saved' && <span className="save-status save-saved">✓</span>}
       {status && status !== 'saving' && status !== 'saved' && (
         <span className="save-status save-error">{status}</span>

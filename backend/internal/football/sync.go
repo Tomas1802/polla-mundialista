@@ -81,11 +81,11 @@ func (s *Service) Tick(ctx context.Context) error {
 	if state.NextMatchUTC != nil && !now.Before(*state.NextMatchUTC) {
 		return s.FullSync(ctx)
 	}
-	// While any match is live (or just finished but not yet captured), keep
-	// polling so final results land within minutes rather than waiting for the
-	// following match's kickoff. Bounded by minPollGap to limit API calls.
+	// Any match whose kickoff has passed but isn't FINISHED yet (e.g. the service
+	// was asleep when it ended): keep polling until its result lands, regardless
+	// of how long ago it kicked off. Bounded by minPollGap to limit API calls.
 	if now.Sub(*state.LastFullSyncAt) >= minPollGap {
-		if live, err := s.store.HasLiveMatches(ctx, now); err == nil && live {
+		if unsettled, err := s.store.HasUnsettledMatches(ctx, now); err == nil && unsettled {
 			return s.FullSync(ctx)
 		}
 	}

@@ -85,11 +85,13 @@ func (d *DB) ListMatches(ctx context.Context) ([]model.Match, error) {
 	return out, rows.Err()
 }
 
-// HasLiveMatches reports whether any match kicked off within the last few hours
-// but is not yet recorded as FINISHED in our cache. While true, the sync policy
-// keeps polling so final results are captured promptly instead of waiting for
-// the next match's kickoff. Manually-set results are ignored (no need to poll).
-func (d *DB) HasLiveMatches(ctx context.Context, now time.Time) (bool, error) {
+// HasUnsettledMatches reports whether any match whose kickoff has already passed
+// is not yet recorded as FINISHED in our cache. While true, the sync policy keeps
+// polling so a final result is captured even if the service was asleep when the
+// match ended. The lower bound (2 days) keeps a permanently-unresolved fixture
+// (postponed/cancelled) from polling forever; the daily sync still covers those.
+// Manually-set results are ignored (no need to poll).
+func (d *DB) HasUnsettledMatches(ctx context.Context, now time.Time) (bool, error) {
 	var exists bool
 	err := d.Pool.QueryRow(ctx, `
 		SELECT EXISTS (
@@ -97,7 +99,7 @@ func (d *DB) HasLiveMatches(ctx context.Context, now time.Time) (bool, error) {
 			WHERE status <> 'FINISHED'
 			  AND result_manual = false
 			  AND utc_date <= $1
-			  AND utc_date >= $1 - INTERVAL '4 hours'
+			  AND utc_date >= $1 - INTERVAL '2 days'
 		)`, now).Scan(&exists)
 	return exists, err
 }

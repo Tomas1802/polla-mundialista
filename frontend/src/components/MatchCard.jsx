@@ -6,6 +6,10 @@ function clamp(n) {
   return Math.max(0, Math.min(99, n))
 }
 
+// After this long past kickoff, an "IN_PLAY/PAUSED" status is treated as a
+// not-yet-synced result rather than a genuinely live match.
+const STALE_LIVE_MS = 3.5 * 60 * 60 * 1000
+
 const STAGE_LABELS = {
   GROUP_STAGE: 'Fase de grupos',
   LAST_32: 'Dieciseisavos',
@@ -30,9 +34,19 @@ export default function MatchCard({ match, cardId }) {
   const [status, setStatus] = useState('')
 
   const finished = match.status === 'FINISHED'
-  const live = match.status === 'IN_PLAY' || match.status === 'PAUSED'
+  const rawLive = match.status === 'IN_PLAY' || match.status === 'PAUSED'
+  // A match lasts ~3h at most (extra time + penalties). If it still reads "live"
+  // long after kickoff, the result just hasn't synced yet — don't call it live.
+  const stale = rawLive && Date.now() - new Date(match.utcDate).getTime() > STALE_LIVE_MS
+  const live = rawLive && !stale
   const hasReal = match.scoreHome != null && match.scoreAway != null
-  const realLabel = finished ? 'Resultado real' : live ? 'En vivo' : 'Resultado'
+  const realLabel = finished
+    ? 'Resultado real'
+    : stale
+      ? 'Actualizando resultado…'
+      : live
+        ? 'En vivo'
+        : 'Resultado'
   const isDrawPred = home != null && away != null && home === away
   const showPenalty = editable && match.knockout && isDrawPred
 
@@ -132,7 +146,7 @@ export default function MatchCard({ match, cardId }) {
               <span className="result-tag">Tu pronóstico</span>
               <strong>{(home ?? '–')}–{(away ?? '–')}</strong>
             </span>
-            <span className={'result-line' + (live ? ' result-live' : '')}>
+            <span className={'result-line' + (live ? ' result-live' : stale ? ' result-pending' : '')}>
               <span className="result-tag">{realLabel}</span>
               <strong>{match.scoreHome}–{match.scoreAway}</strong>
             </span>

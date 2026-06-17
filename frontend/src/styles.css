@@ -304,6 +304,8 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
   background: var(--live); animation: livePulse 1.3s ease-in-out infinite;
 }
 .result-line.result-live strong { color: var(--live); }
+.result-line.result-pending .result-tag { color: #8a4b00; font-weight: 700; }
+.result-line.result-pending strong { color: #8a4b00; }
 @keyframes livePulse {
   0%, 100% { box-shadow: 0 0 0 0 rgba(216, 58, 52, 0.5); opacity: 1; }
   50% { box-shadow: 0 0 0 6px rgba(216, 58, 52, 0); opacity: 0.7; }
@@ -375,6 +377,7 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
 .sc-pts-zero { background: #edf1ef; color: var(--muted); }
 .sc-rule { font-size: 0.76rem; font-weight: 700; color: var(--green-dark); background: var(--green-light); padding: 0.14rem 0.55rem; border-radius: 999px; }
 .sc-live { color: var(--live); font-weight: 700; font-size: 0.9rem; }
+.sc-pending { color: #8a4b00; font-weight: 700; font-size: 0.9rem; }
 
 /* ── Equipos ────────────────────────────────────────────────────────────── */
 .team-block { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 0.8rem; overflow: hidden; box-shadow: var(--shadow-sm); }

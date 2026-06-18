@@ -72,17 +72,15 @@ function buildText(r) {
   if (!r || r.matchCount === 0) return 'No hay partidos de hoy pendientes por llenar.'
   const lines = []
   lines.push(`⚽ Faltan marcadores de hoy (${r.date})`)
-  lines.push(`Partidos: ${r.matches.join(', ')}`)
+  lines.push(`Partidos por jugar: ${r.matches.join(', ')}`)
   lines.push('')
   if (!r.cards || r.cards.length === 0) {
     lines.push('✅ ¡Todos llenaron los partidos de hoy! 🎉')
     return lines.join('\n')
   }
-  lines.push('Por favor completen sus cartones:')
+  lines.push('Por favor completen estos marcadores:')
   for (const c of r.cards) {
-    const all = c.missing.length === r.matchCount
-    const detail = all ? 'faltan todos' : `faltan ${c.missing.join(', ')}`
-    lines.push(`• ${c.playerName} · ${c.cardLabel}: ${detail}`)
+    lines.push(`• ${c.playerName} · ${c.cardLabel}: ${c.missing.join(', ')}`)
   }
   return lines.join('\n')
 }

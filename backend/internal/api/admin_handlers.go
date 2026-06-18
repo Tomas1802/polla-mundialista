@@ -131,9 +131,8 @@ func (s *Server) handleAdminCards(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]any{"cards": cards})
 }
 
-// handleAdminEditPrediction lets the admin correct a card's marcador for
-// upcoming matches only. Matches already started or finished are rejected, since
-// the pool has been validated. Admin only.
+// handleAdminEditPrediction lets the admin correct any card's marcador,
+// including matches already started or finished (no kickoff lock). Admin only.
 func (s *Server) handleAdminEditPrediction(w http.ResponseWriter, r *http.Request) {
 	if !s.requireAdmin(w, r) {
 		return
@@ -160,12 +159,6 @@ func (s *Server) handleAdminEditPrediction(w http.ResponseWriter, r *http.Reques
 	m, err := s.store.GetMatch(r.Context(), matchID)
 	if err != nil {
 		writeError(w, http.StatusNotFound, "Partido no encontrado.")
-		return
-	}
-	// The pool was already validated: no edits to matches that have started or
-	// whose kickoff time has passed (covers sync lag), not even for the admin.
-	if m.Started() || !time.Now().Before(m.UTCDate) {
-		writeError(w, http.StatusConflict, "No se puede editar un partido que ya empezó o terminó.")
 		return
 	}
 	penaltyWinner := ""

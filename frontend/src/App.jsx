@@ -29,13 +29,21 @@ export default function App() {
       const d = await api.cards()
       const list = d.cards || []
       setCards(list)
-      setCardId((prev) => prev || (list.length ? list[0].id : null))
+      // Keep the current selection only if it belongs to this list; otherwise
+      // fall back to the first card. Prevents reusing another user's cardId.
+      setCardId((prev) =>
+        prev && list.some((c) => c.id === prev) ? prev : list.length ? list[0].id : null,
+      )
     } catch {
       setCards([])
     }
   }, [])
 
+  // Reset card state whenever the logged-in user changes (e.g. logout + login as
+  // someone else without a page reload), then load the new user's cards.
   useEffect(() => {
+    setCards(null)
+    setCardId(null)
     if (user && user.playerId) loadCards()
   }, [user, loadCards])
 
@@ -54,8 +62,10 @@ export default function App() {
   const tabs = user.isAdmin
     ? [...BASE_TABS.filter((t) => t.id === 'ranking' || t.id === 'equipos'), ADMIN_TAB]
     : BASE_TABS
-  const showCardSelector = (tab === 'marcadores' || tab === 'tablas') && cards && cards.length > 1
-  const noCard = (tab === 'marcadores' || tab === 'tablas') && !cardId
+  const onCardTab = tab === 'marcadores' || tab === 'tablas'
+  const showCardSelector = onCardTab && cards && cards.length > 1
+  const cardsLoading = onCardTab && user.playerId && cards === null
+  const noCard = onCardTab && cards !== null && !cardId
 
   return (
     <div className="app">
@@ -66,6 +76,8 @@ export default function App() {
 
       <main className="app-main">
         {showCardSelector && <CardSelector cards={cards} cardId={cardId} onChange={setCardId} />}
+
+        {cardsLoading && <div className="spinner" aria-label="Cargando cartones" />}
 
         {noCard && (
           <p className="empty">

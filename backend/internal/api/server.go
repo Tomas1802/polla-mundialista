@@ -60,6 +60,7 @@ func (s *Server) Handler() http.Handler {
 	protected.HandleFunc("GET /api/teams", s.handleTeams)
 	protected.HandleFunc("GET /api/tables", s.handleTables)
 	protected.HandleFunc("GET /api/admin/players", s.handleAdminPlayers)
+	protected.HandleFunc("GET /api/admin/missing-today", s.handleAdminMissingToday)
 	protected.HandleFunc("GET /api/admin/settings", s.handleAdminGetSettings)
 	protected.HandleFunc("PUT /api/admin/settings", s.handleAdminSetSettings)
 	protected.HandleFunc("GET /api/admin/cards", s.handleAdminCards)

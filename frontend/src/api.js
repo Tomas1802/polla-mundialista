@@ -110,10 +110,5 @@ export const api = {
   adminSetSettings: (matchId) =>
     request('/api/admin/settings', { method: 'PUT', body: JSON.stringify({ editLockUntilMatchId: matchId }) }),
   adminCards: () => request('/api/admin/cards'),
-  adminEditPrediction: (cardId, matchId, body) =>
-    request(`/api/admin/cards/${cardId}/predictions/${matchId}`, {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    }),
   adminImport: () => request('/api/admin/import-scores', { method: 'POST' }),
 }

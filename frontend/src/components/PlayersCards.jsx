@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 
-// Admin view: each player is a collapsible block; inside, each of their cards
-// is collapsible; opening a card lazily loads its matches and lets the admin
-// edit any marcador (including already-played ones).
+// Admin view (read-only): each player is a collapsible block; inside, each card
+// is collapsible; opening a card lazily loads its matches and shows the player's
+// marcadores together with the official result. No editing here.
 export default function PlayersCards() {
   const [players, setPlayers] = useState(null)
   const [error, setError] = useState('')
@@ -28,7 +28,7 @@ export default function PlayersCards() {
     <section className="admin-section">
       <h2>Jugadores y cartones ({players.length})</h2>
       <p className="tablas-intro">
-        Abre un jugador, luego un cartón, y corrige cualquier marcador (incluidos los ya jugados).
+        Abre un jugador, luego un cartón, para ver sus marcadores y el resultado real (solo lectura).
       </p>
       {players.map((p) => (
         <details key={p.name} className="player-block">
@@ -66,48 +66,25 @@ function CartonBlock({ card }) {
       <div className="carton-block-body">
         {error && <p className="error">{error}</p>}
         {matches === null && !error && <div className="spinner" />}
-        {matches && matches.map((m) => <FixRow key={m.id} cardId={card.id} match={m} />)}
+        {matches && matches.map((m) => <ViewRow key={m.id} match={m} />)}
       </div>
     </details>
   )
 }
 
-function FixRow({ cardId, match }) {
-  const [home, setHome] = useState(match.prediction?.home ?? '')
-  const [away, setAway] = useState(match.prediction?.away ?? '')
-  const [status, setStatus] = useState('')
-
-  async function save() {
-    setStatus('saving')
-    try {
-      await api.adminEditPrediction(cardId, match.id, {
-        home: home === '' ? null : Number(home),
-        away: away === '' ? null : Number(away),
-        penaltyWinner: '',
-      })
-      setStatus('saved')
-      setTimeout(() => setStatus((s) => (s === 'saved' ? '' : s)), 1500)
-    } catch (e) {
-      setStatus(e.message)
-    }
-  }
+function ViewRow({ match }) {
+  const pred = match.prediction
+  const predText = pred && pred.home != null ? `${pred.home}–${pred.away}` : '—'
+  const finished = match.status === 'FINISHED'
 
   return (
     <div className="fix-row">
       <span className="fix-teams">{match.homeTeamName} <span className="vs">vs</span> {match.awayTeamName}</span>
-      <input className="admin-score" type="number" min="0" max="99" value={home}
-        onChange={(e) => setHome(e.target.value)} />
-      <span className="admin-dash">–</span>
-      <input className="admin-score" type="number" min="0" max="99" value={away}
-        onChange={(e) => setAway(e.target.value)} />
-      <button className="fix-save" onClick={save} disabled={status === 'saving'}>Guardar</button>
-      {match.status === 'FINISHED' && (
+      <span className="fix-pred">Pronóstico: <strong>{predText}</strong></span>
+      {finished && (
         <span className="fix-real">real {match.scoreHome}–{match.scoreAway}</span>
       )}
-      {status === 'saved' && <span className="save-status save-saved">✓</span>}
-      {status && status !== 'saving' && status !== 'saved' && (
-        <span className="save-status save-error">{status}</span>
-      )}
+      {finished && match.points != null && <span className="points-badge">+{match.points}</span>}
     </div>
   )
 }

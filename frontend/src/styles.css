@@ -124,7 +124,7 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
   padding: 1rem; padding-top: max(1rem, env(safe-area-inset-top));
 }
 .notif-panel {
-  background: var(--card); width: 100%; max-width: 460px;
+  background: var(--card); width: 100%; max-width: 460px; color: var(--ink);
   border-radius: var(--radius); box-shadow: var(--shadow-lg);
   max-height: 85vh; overflow-y: auto; animation: pop 0.3s ease both;
 }
@@ -143,7 +143,7 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
   padding: 0.7rem 0.8rem; animation: fadeUp 0.3s ease both;
 }
 .notif-icon { font-size: 1.4rem; line-height: 1.15; flex-shrink: 0; }
-.notif-title { font-weight: 800; font-size: 0.95rem; }
+.notif-title { font-weight: 800; font-size: 0.95rem; color: var(--ink); }
 .notif-body { color: var(--muted); font-size: 0.9rem; margin-top: 0.1rem; }
 
 .app-main { max-width: 680px; margin: 0 auto; padding: 1.1rem 1rem 1.4rem; }

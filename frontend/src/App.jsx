@@ -4,6 +4,7 @@ import { api } from './api.js'
 import Login from './components/Login.jsx'
 import ChangePin from './components/ChangePin.jsx'
 import CardSelector from './components/CardSelector.jsx'
+import NotificationsBell from './components/NotificationsBell.jsx'
 import Marcadores from './pages/Marcadores.jsx'
 import Tablas from './pages/Tablas.jsx'
 import Ranking from './pages/Ranking.jsx'
@@ -71,7 +72,10 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <span className="app-title">Polla Mundial 2026</span>
-        <button className="logout-btn" onClick={logout}>Salir</button>
+        <div className="header-actions">
+          <NotificationsBell />
+          <button className="logout-btn" onClick={logout}>Salir</button>
+        </div>
       </header>
 
       <main className="app-main">

@@ -52,6 +52,7 @@ type matchDTO struct {
 	Active       bool           `json:"active"`
 	Prediction   *predictionDTO `json:"prediction"`
 	Points       *int           `json:"points"`
+	Provisional  bool           `json:"provisional"` // Points are live (score may still change)
 }
 
 type matchesResponse struct {
@@ -158,6 +159,10 @@ func (s *Server) handleMatches(w http.ResponseWriter, r *http.Request) {
 			if m.Finished() {
 				pts := ranking.MatchPoints(m, p)
 				dto.Points = &pts
+			} else if (m.Status == "IN_PLAY" || m.Status == "PAUSED") && m.ScoreHome != nil && m.ScoreAway != nil {
+				pts := ranking.LivePoints(m, p)
+				dto.Points = &pts
+				dto.Provisional = true
 			}
 		}
 		views = append(views, dto)

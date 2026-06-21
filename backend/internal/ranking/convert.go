@@ -54,6 +54,15 @@ func MatchPoints(m model.Match, p model.CardPrediction) int {
 	return matchPoints(m, p)
 }
 
+// LivePoints scores a match using its current (in-progress) score, ignoring
+// whether it has finished. For provisional "if the score holds" displays only.
+func LivePoints(m model.Match, p model.CardPrediction) int {
+	if m.ScoreHome == nil || m.ScoreAway == nil {
+		return 0
+	}
+	return matchPoints(m, p)
+}
+
 func matchPoints(m model.Match, p model.CardPrediction) int {
 	res := toResult(m)
 	pred := toPrediction(p)

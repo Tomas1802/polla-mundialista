@@ -23,12 +23,44 @@ export default function Ranking() {
   return (
     <div className="ranking">
       <h2 className="ranking-title">Ranking por cartón</h2>
+      <Podium top={ranking.slice(0, 3)} mePlayerId={mePlayerId} />
       <p className="tablas-intro">Toca un cartón para ver sus marcadores y los puntos de cada partido.</p>
       <ol className="ranking-list">
         {ranking.map((e) => (
           <RankingRow key={e.cardId} entry={e} isMe={e.playerId === mePlayerId} />
         ))}
       </ol>
+    </div>
+  )
+}
+
+const MEDALS = { 1: '🥇', 2: '🥈', 3: '🥉' }
+
+function Podium({ top, mePlayerId }) {
+  if (!top || top.length === 0) return null
+  const [first, second, third] = top
+  // Visual order: 2nd, 1st, 3rd (center stage for the leader).
+  return (
+    <div className="podium" aria-label="Podio de líderes">
+      <PodiumSlot entry={second} place={2} mePlayerId={mePlayerId} />
+      <PodiumSlot entry={first} place={1} mePlayerId={mePlayerId} />
+      <PodiumSlot entry={third} place={3} mePlayerId={mePlayerId} />
+    </div>
+  )
+}
+
+function PodiumSlot({ entry, place, mePlayerId }) {
+  if (!entry) return <div className="podium-slot podium-empty" aria-hidden="true" />
+  const isMe = entry.playerId === mePlayerId
+  return (
+    <div className={`podium-slot podium-${place}` + (isMe ? ' me' : '')}>
+      <div className="podium-medal" aria-hidden="true">{MEDALS[place]}</div>
+      <div className="podium-name">{entry.playerName}</div>
+      <div className="podium-card">{entry.cardLabel}</div>
+      <div className="podium-bar">
+        <span className="podium-pts">{entry.points}</span>
+        <span className="podium-place">{place}°</span>
+      </div>
     </div>
   )
 }

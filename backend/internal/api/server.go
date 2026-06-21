@@ -56,6 +56,7 @@ func (s *Server) Handler() http.Handler {
 	protected.HandleFunc("GET /api/matches", s.handleMatches)
 	protected.HandleFunc("PUT /api/cards/{cardId}/predictions/{matchId}", s.handlePutPrediction)
 	protected.HandleFunc("GET /api/ranking", s.handleRanking)
+	protected.HandleFunc("GET /api/notifications", s.handleNotifications)
 	protected.HandleFunc("GET /api/cards/{cardId}/scorecard", s.handleScorecard)
 	protected.HandleFunc("GET /api/teams", s.handleTeams)
 	protected.HandleFunc("GET /api/tables", s.handleTables)

@@ -151,7 +151,16 @@ export default function MatchCard({ match, cardId }) {
               <strong>{match.scoreHome}–{match.scoreAway}</strong>
             </span>
           </div>
-          {match.points != null && <span className="points-badge">+{match.points} pts</span>}
+          {match.points != null && (
+            match.provisional ? (
+              <span className="points-live" title="Puntos si el marcador se mantiene así">
+                <span className="points-live-num">+{match.points}</span>
+                <span className="points-live-tag">provisional</span>
+              </span>
+            ) : (
+              <span className="points-badge">+{match.points} pts</span>
+            )
+          )}
         </div>
       )}
     </article>

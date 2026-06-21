@@ -104,6 +104,73 @@ func (d *DB) HasUnsettledMatches(ctx context.Context, now time.Time) (bool, erro
 	return exists, err
 }
 
+// MatchResultRow is a slim view of a match's official result for the admin
+// result editor (includes whether the result was entered manually).
+type MatchResultRow struct {
+	ID           int64
+	UTCDate      time.Time
+	Stage        string
+	GroupLetter  string
+	HomeTeamName string
+	AwayTeamName string
+	Status       string
+	ScoreHome    *int
+	ScoreAway    *int
+	ResultManual bool
+}
+
+// ListMatchResults returns every match with its official result, chronological.
+func (d *DB) ListMatchResults(ctx context.Context) ([]MatchResultRow, error) {
+	rows, err := d.Pool.Query(ctx, `
+		SELECT id, utc_date, stage, COALESCE(group_letter, ''),
+		       home_team_name, away_team_name, status, score_home, score_away, result_manual
+		FROM matches
+		ORDER BY utc_date, id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []MatchResultRow
+	for rows.Next() {
+		var m MatchResultRow
+		if err := rows.Scan(&m.ID, &m.UTCDate, &m.Stage, &m.GroupLetter,
+			&m.HomeTeamName, &m.AwayTeamName, &m.Status, &m.ScoreHome, &m.ScoreAway, &m.ResultManual); err != nil {
+			return nil, err
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+// SetMatchResult records an admin-entered official result and marks it manual so
+// the football-data sync will not overwrite it. Status becomes FINISHED.
+func (d *DB) SetMatchResult(ctx context.Context, matchID int64, home, away int, winner string) error {
+	ct, err := d.Pool.Exec(ctx, `
+		UPDATE matches SET
+			status = 'FINISHED',
+			score_home = $2,
+			score_away = $3,
+			winner = $4,
+			duration = COALESCE(NULLIF(duration, ''), 'REGULAR'),
+			result_manual = true,
+			last_synced_at = now()
+		WHERE id = $1`, matchID, home, away, winner)
+	if err != nil {
+		return err
+	}
+	if ct.RowsAffected() == 0 {
+		return fmt.Errorf("match %d not found", matchID)
+	}
+	return nil
+}
+
+// ClearMatchManual re-enables automatic syncing for a match (the next sync will
+// refresh its result from the API).
+func (d *DB) ClearMatchManual(ctx context.Context, matchID int64) error {
+	_, err := d.Pool.Exec(ctx, `UPDATE matches SET result_manual = false WHERE id = $1`, matchID)
+	return err
+}
+
 // GetMatch returns a single match by id.
 func (d *DB) GetMatch(ctx context.Context, id int64) (model.Match, error) {
 	var m model.Match

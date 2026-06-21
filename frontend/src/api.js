@@ -99,6 +99,13 @@ export const api = {
 
   adminPlayers: () => request('/api/admin/players'),
   adminMissingToday: () => request('/api/admin/missing-today'),
+  adminMatches: () => request('/api/admin/matches'),
+  adminSetResult: (matchId, body) =>
+    request(`/api/admin/matches/${matchId}/result`, { method: 'PUT', body: JSON.stringify(body) }),
+  adminConfirmResult: (matchId) =>
+    request(`/api/admin/matches/${matchId}/confirm`, { method: 'POST' }),
+  adminClearResult: (matchId) =>
+    request(`/api/admin/matches/${matchId}/result`, { method: 'DELETE' }),
   adminSettings: () => request('/api/admin/settings'),
   adminSetSettings: (matchId) =>
     request('/api/admin/settings', { method: 'PUT', body: JSON.stringify({ editLockUntilMatchId: matchId }) }),

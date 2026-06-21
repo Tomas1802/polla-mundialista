@@ -61,6 +61,10 @@ func (s *Server) Handler() http.Handler {
 	protected.HandleFunc("GET /api/tables", s.handleTables)
 	protected.HandleFunc("GET /api/admin/players", s.handleAdminPlayers)
 	protected.HandleFunc("GET /api/admin/missing-today", s.handleAdminMissingToday)
+	protected.HandleFunc("GET /api/admin/matches", s.handleAdminMatches)
+	protected.HandleFunc("PUT /api/admin/matches/{matchId}/result", s.handleAdminSetResult)
+	protected.HandleFunc("POST /api/admin/matches/{matchId}/confirm", s.handleAdminConfirmResult)
+	protected.HandleFunc("DELETE /api/admin/matches/{matchId}/result", s.handleAdminClearResult)
 	protected.HandleFunc("GET /api/admin/settings", s.handleAdminGetSettings)
 	protected.HandleFunc("PUT /api/admin/settings", s.handleAdminSetSettings)
 	protected.HandleFunc("GET /api/admin/cards", s.handleAdminCards)
@@ -79,7 +83,7 @@ func (s *Server) cors(next http.Handler) http.Handler {
 		if r.Header.Get("Origin") == s.cfg.AllowedOrigin {
 			w.Header().Set("Access-Control-Allow-Origin", s.cfg.AllowedOrigin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		}
 		if r.Method == http.MethodOptions {

@@ -53,6 +53,21 @@ export default function App() {
     if (user && user.isAdmin && !user.playerId) setTab('admin')
   }, [user])
 
+  // One-time hard reload for the admin account (clears any cached bundle/state).
+  // Bump ADMIN_RELOAD_TOKEN on a future deploy to trigger another single reload.
+  useEffect(() => {
+    if (!user || !user.isAdmin) return
+    const TOKEN = 'reload-2026-06-22'
+    try {
+      if (localStorage.getItem('polla_admin_reload') !== TOKEN) {
+        localStorage.setItem('polla_admin_reload', TOKEN)
+        window.location.reload()
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [user])
+
   if (loading) {
     return <div className="center-screen"><div className="spinner" aria-label="Cargando" /></div>
   }

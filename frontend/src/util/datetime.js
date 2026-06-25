@@ -8,9 +8,18 @@ const timeFmt = new Intl.DateTimeFormat('es', {
   hour: '2-digit',
   minute: '2-digit',
 })
+const shortDateFmt = new Intl.DateTimeFormat('es', {
+  day: 'numeric',
+  month: 'short',
+})
 
 export function formatDate(utc) {
   return capitalize(dateFmt.format(new Date(utc)))
+}
+
+// Compact date like "14 jun" for dense lists.
+export function formatShortDate(utc) {
+  return shortDateFmt.format(new Date(utc)).replace('.', '')
 }
 
 export function formatTime(utc) {

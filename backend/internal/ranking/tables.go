@@ -3,6 +3,7 @@ package ranking
 import (
 	"context"
 	"sort"
+	"time"
 
 	"polla/internal/model"
 	"polla/internal/scoring"
@@ -77,6 +78,69 @@ func (s *Service) GroupTables(ctx context.Context, cardID int64) ([]GroupTable, 
 		out = append(out, gt)
 	}
 	return out, nil
+}
+
+// GroupAward is the section-2 (group positions) bonus a card earned for one
+// finished group, with the date the group closed (its last match kickoff).
+type GroupAward struct {
+	Group    string    `json:"group"`
+	Points   int       `json:"points"`
+	ClosedAt time.Time `json:"closedAt"`
+}
+
+// GroupAwards returns the per-group position bonuses a card has earned: one entry
+// per finished 4-team group the card predicted. It mirrors the group-position
+// scoring used by Standings, so summing these with the per-match points yields
+// the card's official total — the transparent breakdown shown in the scorecard.
+func (s *Service) GroupAwards(ctx context.Context, cardID int64) ([]GroupAward, error) {
+	matches, err := s.store.ListMatches(ctx)
+	if err != nil {
+		return nil, err
+	}
+	teams, err := s.store.ListTeams(ctx)
+	if err != nil {
+		return nil, err
+	}
+	cardPreds, err := s.store.ListCardPredictions(ctx, cardID)
+	if err != nil {
+		return nil, err
+	}
+	preds := indexByMatch(cardPreds)
+
+	teamIDsByGroup := groupTeamIDs(teams)
+	letters := make([]string, 0, len(teamIDsByGroup))
+	for letter := range teamIDsByGroup {
+		letters = append(letters, letter)
+	}
+	sort.Strings(letters)
+
+	out := make([]GroupAward, 0, len(letters))
+	for _, letter := range letters {
+		ids := teamIDsByGroup[letter]
+		gms := groupMatches(letter, matches)
+		realRows, finished := realStandings(ids, gms)
+		if !finished || len(ids) != 4 || !hasGroupPredictions(gms, preds) {
+			continue
+		}
+		predRows := predictedStandings(ids, gms, preds)
+		out = append(out, GroupAward{
+			Group:    letter,
+			Points:   scoring.ScoreGroupPositions(toGroupOrder(predRows), toGroupOrder(realRows)),
+			ClosedAt: latestFinish(gms),
+		})
+	}
+	return out, nil
+}
+
+// latestFinish returns the kickoff of the last finished match in the group.
+func latestFinish(gms []model.Match) time.Time {
+	var t time.Time
+	for _, m := range gms {
+		if m.Finished() && m.UTCDate.After(t) {
+			t = m.UTCDate
+		}
+	}
+	return t
 }
 
 func toTableRows(rows []standings.Row, teams map[int64]model.Team) []TableRow {

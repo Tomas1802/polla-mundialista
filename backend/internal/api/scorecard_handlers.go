@@ -31,11 +31,12 @@ type scMatch struct {
 }
 
 type scorecardResponse struct {
-	CardID      int64     `json:"cardId"`
-	PlayerName  string    `json:"playerName"`
-	CardLabel   string    `json:"cardLabel"`
-	TotalPoints int       `json:"totalPoints"`
-	Matches     []scMatch `json:"matches"`
+	CardID      int64                `json:"cardId"`
+	PlayerName  string               `json:"playerName"`
+	CardLabel   string               `json:"cardLabel"`
+	TotalPoints int                  `json:"totalPoints"`
+	Matches     []scMatch            `json:"matches"`
+	Groups      []ranking.GroupAward `json:"groups"`
 }
 
 // handleScorecard returns a card's marcadores with per-match points and the rule
@@ -115,11 +116,24 @@ func (s *Server) handleScorecard(w http.ResponseWriter, r *http.Request) {
 		rows = append(rows, row)
 	}
 
+	// Section-2 bonuses earned when 4-team groups closed. These are part of the
+	// card's official total but are not tied to a single match, so they are
+	// surfaced separately (with their closing date) for a transparent history.
+	awards, err := s.ranking.GroupAwards(ctx, cardID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "No pudimos calcular los puntos por grupo.")
+		return
+	}
+	for _, a := range awards {
+		total += a.Points
+	}
+
 	writeJSON(w, http.StatusOK, scorecardResponse{
 		CardID:      cardID,
 		PlayerName:  playerName,
 		CardLabel:   card.Label,
 		TotalPoints: total,
 		Matches:     rows,
+		Groups:      awards,
 	})
 }

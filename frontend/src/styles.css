@@ -236,24 +236,48 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
   color: var(--green); font-weight: 700; font-size: 1rem; text-decoration: underline;
 }
 
-/* ── Rank chip ──────────────────────────────────────────────────────────── */
-.rank-chip {
-  position: relative; overflow: hidden;
-  display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;
-  color: #fff;
-  background: linear-gradient(135deg, var(--green-dark), var(--green) 70%, var(--green-2));
-  border-radius: var(--radius); padding: 1rem 1.15rem; margin-bottom: 1rem;
-  box-shadow: var(--shadow-md);
+/* ── Marcadores sticky header (rank + cards + phase/group switches) ──────── */
+/* Bleeds to the content edges and parks just below the app header so the key
+   controls stay visible after the list auto-scrolls to the current match. */
+.mk-header {
+  position: sticky;
+  top: calc(var(--header-h) + env(safe-area-inset-top));
+  z-index: 12;
+  margin: -1.1rem -1rem 1rem;
+  padding: 0.55rem 1rem 0.65rem;
+  background: rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 8px 18px -14px rgba(7, 61, 44, 0.55);
+  display: flex; flex-direction: column; gap: 0.5rem;
 }
-.rank-chip::after {
-  content: "🏆"; position: absolute; right: -8px; bottom: -14px;
-  font-size: 4.6rem; opacity: 0.16; transform: rotate(-12deg);
+.mk-bar { display: flex; align-items: center; gap: 0.55rem; min-width: 0; }
+
+/* Compact rank pill */
+.mk-rank {
+  flex-shrink: 0; display: flex; align-items: center; gap: 0.4rem;
+  color: #fff; border-radius: 999px; padding: 0.32rem 0.75rem 0.32rem 0.6rem;
+  background: linear-gradient(135deg, var(--green-dark), var(--green) 75%, var(--green-2));
+  box-shadow: var(--shadow-sm);
 }
-.rank-chip strong { font-size: 1.8rem; line-height: 1; font-weight: 800; }
-.rank-chip .rank-points {
-  margin-left: auto; font-weight: 800; position: relative;
-  background: rgba(255, 255, 255, 0.2); padding: 0.3rem 0.8rem; border-radius: 999px;
+.mk-rank-pos { font-size: 1.18rem; font-weight: 800; line-height: 1; }
+.mk-rank-meta { display: flex; align-items: center; gap: 0.4rem; font-size: 0.74rem; font-weight: 600; opacity: 0.96; }
+.mk-rank-pts { background: rgba(255, 255, 255, 0.22); border-radius: 999px; padding: 0.08rem 0.45rem; font-weight: 800; white-space: nowrap; }
+
+/* Card switcher embedded in the header: drop its own sticky/box styling. */
+.mk-bar .card-tabs {
+  position: static; top: auto; z-index: auto; margin: 0; flex: 1 1 auto; min-width: 0;
+  background: var(--bg); box-shadow: none; padding: 0.2rem; gap: 0.2rem;
 }
+.mk-bar .card-tab { padding: 0.3rem 0.25rem; }
+.mk-bar .card-tab-label { font-size: 0.82rem; }
+.mk-bar .card-tab-sub { font-size: 0.66rem; }
+
+/* The switches sit flush inside the header (the header's gap spaces them). */
+.mk-header .phase-toggle,
+.mk-header .subtoggle { margin: 0; }
+.mk-header .phase-btn { padding: 0.5rem 0.4rem; font-size: 0.95rem; }
+.mk-header .subtoggle-btn { padding: 0.45rem 0.4rem; }
 
 /* ── Reglas ─────────────────────────────────────────────────────────────── */
 .reglas {
@@ -390,7 +414,7 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
 .mini-table th, .mini-table td { padding: 0.4rem 0.3rem; text-align: center; border-bottom: 1px solid var(--line); }
 .mini-table th { color: var(--muted); font-weight: 700; }
 .mini-table th.team, .mini-table td.team { text-align: left; }
-.mini-table td.team { display: flex; align-items: center; gap: 0.3rem; }
+.mini-table td.team .team-cell { display: flex; align-items: center; gap: 0.3rem; }
 .team-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mini-table th.pos, .mini-table td.pos { width: 2rem; }
 .pos-badge { display: inline-grid; place-items: center; width: 1.5rem; height: 1.5rem; border-radius: 50%; background: #edf1ef; color: var(--muted); font-weight: 800; font-size: 0.78rem; }
@@ -452,22 +476,50 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
 .rank-panel { padding: 0.25rem 0.9rem 0.7rem; border-top: 1px solid var(--line); }
 .sc-empty { color: var(--muted); padding: 0.6rem 0.2rem; }
 .sc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.sc-match { padding: 0.6rem 0.1rem; border-bottom: 1px solid var(--line); animation: fadeUp 0.3s ease both; }
-.sc-match:last-child { border-bottom: none; }
-.sc-teams { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 0.5rem; }
-.sc-team { font-weight: 700; font-size: 0.95rem; }
-.sc-team-away { text-align: right; }
-.sc-real { font-weight: 800; font-variant-numeric: tabular-nums; background: var(--green-light); color: var(--green-dark); padding: 0.12rem 0.55rem; border-radius: 8px; white-space: nowrap; }
-.sc-dash { margin: 0 0.12rem; color: var(--muted); }
-.sc-detail { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.35rem; flex-wrap: wrap; }
-.sc-pred { color: var(--muted); font-size: 0.9rem; }
-.sc-pred strong { color: var(--ink); font-variant-numeric: tabular-nums; }
-.sc-earned { display: flex; align-items: center; gap: 0.45rem; }
-.sc-pts { background: linear-gradient(135deg, var(--gold), #c98a00); color: #2a2100; font-weight: 800; padding: 0.1rem 0.6rem; border-radius: 999px; font-size: 0.9rem; }
+.sc-row {
+  display: flex; gap: 0.55rem; align-items: flex-start;
+  padding: 0.4rem 0.15rem; border-bottom: 1px solid var(--line);
+  animation: fadeUp 0.3s ease both;
+}
+.sc-row:last-child { border-bottom: none; }
+.sc-day {
+  flex: 0 0 auto; width: 3.1rem; padding-top: 0.1rem;
+  font-size: 0.72rem; font-weight: 700; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.sc-body { flex: 1 1 auto; min-width: 0; }
+.sc-line1 { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.sc-mt { font-size: 0.86rem; font-weight: 600; min-width: 0; }
+.sc-mt b {
+  font-variant-numeric: tabular-nums; background: var(--green-light); color: var(--green-dark);
+  padding: 0.02rem 0.4rem; border-radius: 7px; margin: 0 0.18rem; white-space: nowrap;
+}
+.sc-line2 { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.12rem; }
+.sc-line2 > span:first-child { color: var(--muted); font-size: 0.78rem; }
+.sc-line2 b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.sc-dash { margin: 0 0.1rem; color: var(--muted); }
+.sc-pts {
+  flex-shrink: 0; background: linear-gradient(135deg, var(--gold), #c98a00); color: #2a2100;
+  font-weight: 800; padding: 0.08rem 0.55rem; border-radius: 999px; font-size: 0.84rem;
+}
 .sc-pts-zero { background: #edf1ef; color: var(--muted); }
-.sc-rule { font-size: 0.76rem; font-weight: 700; color: var(--green-dark); background: var(--green-light); padding: 0.14rem 0.55rem; border-radius: 999px; }
-.sc-live { color: var(--live); font-weight: 700; font-size: 0.9rem; }
-.sc-pending { color: #8a4b00; font-weight: 700; font-size: 0.9rem; }
+.sc-rule { font-size: 0.7rem; font-weight: 700; color: var(--green-dark); background: var(--green-light); padding: 0.1rem 0.5rem; border-radius: 999px; white-space: nowrap; }
+.sc-live { flex-shrink: 0; color: var(--live); font-weight: 700; font-size: 0.8rem; }
+.sc-pending { flex-shrink: 0; color: #8a4b00; font-weight: 700; font-size: 0.8rem; }
+
+/* Group-closure bonus rows stand apart from match rows. */
+.sc-row-group { background: linear-gradient(90deg, var(--green-light), transparent 92%); border-radius: 8px; }
+.sc-group-title { font-weight: 800; color: var(--green-dark); }
+.sc-rule-group { background: var(--gold-soft); color: #7a5b00; }
+
+/* Grand total — equals the card's ranking points. */
+.sc-total {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 0.55rem; padding: 0.5rem 0.8rem; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--green-dark), var(--green) 75%, var(--green-2));
+  color: #fff; font-weight: 700;
+}
+.sc-total strong { font-size: 1.15rem; font-weight: 800; }
 
 /* ── Equipos ────────────────────────────────────────────────────────────── */
 .team-block { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); margin-bottom: 0.8rem; overflow: hidden; box-shadow: var(--shadow-sm); }
@@ -638,3 +690,83 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* ── Phase switch (Fase de grupos / Eliminatoria) ───────────────────────── */
+.phase-toggle {
+  display: flex; gap: 0.35rem; margin-bottom: 0.9rem;
+  background: var(--card); border: 1px solid var(--line); border-radius: 999px;
+  padding: 0.3rem; box-shadow: var(--shadow-sm);
+}
+.phase-btn {
+  flex: 1; border: none; background: transparent; color: var(--muted);
+  font-weight: 800; font-size: 0.98rem; padding: 0.6rem 0.5rem; border-radius: 999px;
+  transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+.phase-btn.phase-active {
+  background: linear-gradient(135deg, var(--green-dark), var(--green) 70%, var(--green-2));
+  color: #fff; box-shadow: 0 6px 14px -7px rgba(11, 107, 79, 0.7);
+}
+
+/* Secondary switch inside Fase de grupos (Marcadores / Tablas) */
+.subtoggle { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.subtoggle-btn {
+  flex: 1; border: 1.5px solid var(--line); background: var(--card); color: var(--muted);
+  font-weight: 700; font-size: 0.95rem; padding: 0.5rem 0.5rem; border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.subtoggle-btn.subtoggle-active { border-color: var(--green); background: var(--green-light); color: var(--green-dark); }
+
+/* ── Knockout bracket ───────────────────────────────────────────────────── */
+.bracket-hint { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.5rem; }
+.bracket-wrap { margin-top: 0.2rem; }
+.bracket {
+  display: flex; align-items: stretch; gap: 0.6rem;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  padding: 0.3rem 0.2rem 1rem;
+  scroll-snap-type: x proximity;
+}
+.bk-col {
+  display: flex; flex-direction: column; justify-content: space-around;
+  gap: 0.6rem; min-width: 9.5rem; flex: 0 0 auto;
+}
+.bk-center { min-width: 11rem; justify-content: center; gap: 1rem; }
+.bk-round-label {
+  text-align: center; font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--muted); margin-bottom: 0.1rem;
+}
+.bk-final-label { color: var(--gold); font-size: 0.85rem; }
+.bk-third-label { margin-top: 0.4rem; }
+
+.bk-match {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm);
+  padding: 0.4rem 0.5rem; box-shadow: var(--shadow-sm);
+  display: flex; flex-direction: column; gap: 0.25rem;
+  scroll-snap-align: center;
+}
+.bk-match-empty { opacity: 0.7; border-style: dashed; }
+.bk-final {
+  border-color: var(--gold); background: linear-gradient(180deg, #fffdf5, #fff);
+  box-shadow: 0 6px 18px -10px rgba(227, 160, 8, 0.55);
+}
+.bk-team { display: flex; align-items: center; gap: 0.4rem; min-width: 0; }
+.bk-crest { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; }
+.bk-crest-empty { display: inline-block; border-radius: 50%; background: var(--line); }
+.bk-name {
+  flex: 1; min-width: 0; font-size: 0.85rem; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bk-team-win .bk-name { font-weight: 800; color: var(--green-dark); }
+.bk-team-tbd .bk-name { color: var(--muted); font-style: italic; font-weight: 500; }
+.bk-pen {
+  font-size: 0.6rem; font-weight: 800; text-transform: uppercase; color: var(--gold);
+  background: var(--gold-soft); border-radius: 999px; padding: 0 0.3rem; flex-shrink: 0;
+}
+.bk-score { font-size: 0.95rem; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 1ch; text-align: right; }
+.bk-team-win .bk-score { color: var(--green-dark); }
+.bk-date { font-size: 0.68rem; color: var(--muted); text-align: center; border-top: 1px dashed var(--line); padding-top: 0.2rem; }
+.bk-pred {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.3rem;
+  font-size: 0.7rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 0.2rem;
+}
+.bk-pts { font-weight: 800; color: #2a2100; background: var(--gold-soft); border-radius: 999px; padding: 0 0.35rem; }
+.bk-pts-live { color: #8a5b00; background: #fff7e6; border: 1px dashed var(--gold); }

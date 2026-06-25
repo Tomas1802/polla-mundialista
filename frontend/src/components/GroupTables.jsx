@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api.js'
 
-export default function Tablas({ cardId }) {
+// GroupTables renders the real-vs-predicted standings for every group. It is the
+// "Tablas" view, now embedded inside the Fase 1 (grupos) tab of Marcadores.
+export default function GroupTables({ cardId }) {
   const [groups, setGroups] = useState(null)
   const [error, setError] = useState('')
 
@@ -70,8 +72,10 @@ function MiniTable({ title, rows, correct }) {
             <tr key={r.teamId} className={(i < 2 ? 'qualifies' : '') + (i === 1 ? ' qual-line' : '')}>
               <td className="pos"><span className="pos-badge">{i + 1}</span></td>
               <td className="team">
-                <span className="team-label">{r.teamName}</span>
-                {correct && correct[i] && <span className="pos-ok" title="Posición acertada">✓</span>}
+                <div className="team-cell">
+                  <span className="team-label">{r.teamName}</span>
+                  {correct && correct[i] && <span className="pos-ok" title="Posición acertada">✓</span>}
+                </div>
               </td>
               <td>{r.played}</td>
               <td>{r.goalDiff > 0 ? `+${r.goalDiff}` : r.goalDiff}</td>

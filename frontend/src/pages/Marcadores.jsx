@@ -1,13 +1,22 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { api } from '../api.js'
-import MatchCard from '../components/MatchCard.jsx'
-import Reglas from '../components/Reglas.jsx'
+import CardSelector from '../components/CardSelector.jsx'
+import GroupMatches from '../components/GroupMatches.jsx'
+import GroupTables from '../components/GroupTables.jsx'
+import Bracket from '../components/Bracket.jsx'
 
-export default function Marcadores({ cardId }) {
+// Marcadores is the unified play view. A compact sticky header keeps the key
+// controls in view even after the list auto-scrolls to the current match:
+//   • the player's rank for the selected card
+//   • the card switcher (when the player has more than one cartón)
+//   • the phase switch (Fase de grupos / Eliminatoria)
+//   • the group sub-switch (Marcadores / Tablas)
+// Group fixtures and the bracket are both derived from a single /matches load.
+export default function Marcadores({ cardId, cards = [], onCardChange }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
-  const activeRef = useRef(null)
-  const scrolledRef = useRef(false)
+  const [phase, setPhase] = useState('grupos') // 'grupos' | 'eliminatoria'
+  const [groupView, setGroupView] = useState('marcadores') // 'marcadores' | 'tablas'
 
   const load = useCallback(async () => {
     try {
@@ -20,43 +29,76 @@ export default function Marcadores({ cardId }) {
   useEffect(() => {
     setData(null)
     setError('')
-    scrolledRef.current = false
     load()
   }, [load])
 
-  // Auto-scroll to the active match once per card load.
-  useEffect(() => {
-    if (data && activeRef.current && !scrolledRef.current) {
-      scrolledRef.current = true
-      activeRef.current.scrollIntoView({ block: 'center' })
-    }
-  }, [data])
-
-  if (error) return <p className="error page-error">{error}</p>
-  if (!data) return <div className="spinner" />
-
   return (
     <div className="marcadores">
-      <div className="rank-chip">
-        <span>Tu puesto</span>
-        <strong>#{data.myRank || '—'}</strong>
-        <span>de {data.totalCards}</span>
-        <span className="rank-points">{data.myPoints} pts</span>
-      </div>
+      <header className="mk-header">
+        <div className="mk-bar">
+          <div className="mk-rank">
+            <span className="mk-rank-pos">#{data?.myRank || '—'}</span>
+            <span className="mk-rank-meta">
+              de {data?.totalCards ?? '—'}
+              <span className="mk-rank-pts">{data?.myPoints ?? 0} pts</span>
+            </span>
+          </div>
+          {cards.length > 1 && (
+            <CardSelector cards={cards} cardId={cardId} onChange={onCardChange} />
+          )}
+        </div>
 
-      <Reglas />
+        <div className="phase-toggle" role="tablist" aria-label="Fase">
+          <button
+            role="tab"
+            aria-selected={phase === 'grupos'}
+            className={'phase-btn' + (phase === 'grupos' ? ' phase-active' : '')}
+            onClick={() => setPhase('grupos')}
+          >
+            Fase de grupos
+          </button>
+          <button
+            role="tab"
+            aria-selected={phase === 'eliminatoria'}
+            className={'phase-btn' + (phase === 'eliminatoria' ? ' phase-active' : '')}
+            onClick={() => setPhase('eliminatoria')}
+          >
+            Eliminatoria
+          </button>
+        </div>
 
-      {data.matches.length === 0 && (
-        <p className="empty">Aún no hay partidos cargados. Vuelve pronto.</p>
+        {phase === 'grupos' && (
+          <div className="subtoggle" role="tablist" aria-label="Vista de grupos">
+            <button
+              role="tab"
+              aria-selected={groupView === 'marcadores'}
+              className={'subtoggle-btn' + (groupView === 'marcadores' ? ' subtoggle-active' : '')}
+              onClick={() => setGroupView('marcadores')}
+            >
+              ⚽ Marcadores
+            </button>
+            <button
+              role="tab"
+              aria-selected={groupView === 'tablas'}
+              className={'subtoggle-btn' + (groupView === 'tablas' ? ' subtoggle-active' : '')}
+              onClick={() => setGroupView('tablas')}
+            >
+              📊 Tablas
+            </button>
+          </div>
+        )}
+      </header>
+
+      {error && <p className="error page-error">{error}</p>}
+      {!error && !data && <div className="spinner" />}
+
+      {!error && data && phase === 'grupos' && (
+        groupView === 'marcadores'
+          ? <GroupMatches data={data} cardId={cardId} />
+          : <GroupTables cardId={cardId} />
       )}
 
-      <div className="match-list">
-        {data.matches.map((m) => (
-          <div key={m.id} ref={m.id === data.activeMatchId ? activeRef : null}>
-            <MatchCard match={m} cardId={cardId} />
-          </div>
-        ))}
-      </div>
+      {!error && data && phase === 'eliminatoria' && <Bracket matches={data.matches} />}
     </div>
   )
 }

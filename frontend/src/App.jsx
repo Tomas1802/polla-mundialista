@@ -3,17 +3,14 @@ import { useAuth } from './auth.jsx'
 import { api } from './api.js'
 import Login from './components/Login.jsx'
 import ChangePin from './components/ChangePin.jsx'
-import CardSelector from './components/CardSelector.jsx'
 import NotificationsBell from './components/NotificationsBell.jsx'
 import Marcadores from './pages/Marcadores.jsx'
-import Tablas from './pages/Tablas.jsx'
 import Ranking from './pages/Ranking.jsx'
 import Equipos from './pages/Equipos.jsx'
 import Admin from './pages/Admin.jsx'
 
 const BASE_TABS = [
   { id: 'marcadores', label: 'Marcadores', icon: '⚽' },
-  { id: 'tablas', label: 'Tablas', icon: '📊' },
   { id: 'ranking', label: 'Ranking', icon: '🏆' },
   { id: 'equipos', label: 'Equipos', icon: '👥' },
 ]
@@ -78,8 +75,7 @@ export default function App() {
   const tabs = user.isAdmin
     ? [...BASE_TABS.filter((t) => t.id === 'ranking' || t.id === 'equipos'), ADMIN_TAB]
     : BASE_TABS
-  const onCardTab = tab === 'marcadores' || tab === 'tablas'
-  const showCardSelector = onCardTab && cards && cards.length > 1
+  const onCardTab = tab === 'marcadores'
   const cardsLoading = onCardTab && user.playerId && cards === null
   const noCard = onCardTab && cards !== null && !cardId
 
@@ -94,8 +90,6 @@ export default function App() {
       </header>
 
       <main className="app-main">
-        {showCardSelector && <CardSelector cards={cards} cardId={cardId} onChange={setCardId} />}
-
         {cardsLoading && <div className="spinner" aria-label="Cargando cartones" />}
 
         {noCard && (
@@ -106,8 +100,9 @@ export default function App() {
           </p>
         )}
 
-        {tab === 'marcadores' && cardId && <Marcadores cardId={cardId} />}
-        {tab === 'tablas' && cardId && <Tablas cardId={cardId} />}
+        {tab === 'marcadores' && cardId && (
+          <Marcadores cardId={cardId} cards={cards || []} onCardChange={setCardId} />
+        )}
         {tab === 'ranking' && <Ranking />}
         {tab === 'equipos' && <Equipos />}
         {tab === 'admin' && user.isAdmin && <Admin />}

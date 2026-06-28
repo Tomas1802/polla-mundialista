@@ -14,7 +14,9 @@
       "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\);process.stdin.on\\('end',\\(\\)=>{const j=JSON.parse\\(d\\);const m=j.matches.find\\(x=>x.id===j.editLockUntilMatchId\\);console.log\\('editLockUntilMatchId:',j.editLockUntilMatchId, m?\\('\\('+m.home+' vs '+m.away+', seq '+m.seq+'\\)'\\):''\\);}\\);\")",
       "Bash(cat .env.local)",
       "Bash(cat .env.example)",
-      "PowerShell($d=\"C:\\\\Users\\\\tparr\\\\Documents\\\\TOMAS\\\\PERSONAL\\\\POLLA\"; git -C $d log --oneline -3; Write-Output \"---- files in last commit ----\"; git -C $d show --stat --oneline HEAD | Select-Object -First 20)"
+      "PowerShell($d=\"C:\\\\Users\\\\tparr\\\\Documents\\\\TOMAS\\\\PERSONAL\\\\POLLA\"; git -C $d log --oneline -3; Write-Output \"---- files in last commit ----\"; git -C $d show --stat --oneline HEAD | Select-Object -First 20)",
+      "Bash(go test *)",
+      "Bash(go build *)"
     ]
   }
 }

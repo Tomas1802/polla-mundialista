@@ -11,7 +11,7 @@ import (
 // id so the frontend can highlight their cards.
 func (s *Server) handleRanking(w http.ResponseWriter, r *http.Request) {
 	id, _ := auth.IdentityFrom(r.Context())
-	entries, err := s.ranking.Standings(r.Context())
+	entries, err := s.ranking.PlayerStandings(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "No pudimos calcular el ranking.")
 		return

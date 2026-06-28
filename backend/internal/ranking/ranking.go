@@ -109,6 +109,28 @@ func (s *Service) Standings(ctx context.Context) ([]Entry, error) {
 	return entries, nil
 }
 
+// PlayerStandings returns one entry per player — their highest-scoring card —
+// with ranks recomputed over that reduced set. Entries from Standings are
+// already ordered best-first, so the first card seen for a player is their best
+// (ties between a player's own cards are broken the same way, keeping one).
+func (s *Service) PlayerStandings(ctx context.Context) ([]Entry, error) {
+	entries, err := s.Standings(ctx)
+	if err != nil {
+		return nil, err
+	}
+	seen := map[int64]bool{}
+	best := make([]Entry, 0, len(entries))
+	for _, e := range entries {
+		if seen[e.PlayerID] {
+			continue
+		}
+		seen[e.PlayerID] = true
+		best = append(best, e)
+	}
+	assignRanks(best)
+	return best, nil
+}
+
 // assignRanks sorts entries and assigns shared ranks (1, 2, 2, 4, ...).
 func assignRanks(entries []Entry) {
 	sort.Slice(entries, func(i, j int) bool {

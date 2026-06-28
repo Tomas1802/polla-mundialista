@@ -7,19 +7,15 @@ package scoring
 type GroupOrder [4]int
 
 // ScoreGroupPositions implements section 2 of the reglamento by comparing a
-// predicted group order against the real one.
+// predicted group order against the real one. Positions 1-3 are the qualifiers;
+// the 4th is non-qualifying. The rules are a priority ladder — the first that
+// holds wins:
 //
-// INTERPRETATION (pending organizer confirmation — kept isolated and easy to
-// tune): because each group has four fixed teams, several reglamento rows are
-// unreachable or trivial (e.g. "acierta 1,2,3 en orden" forces the 4th, and
-// "acierta todos los clasificados en cualquier orden" is always true). The
-// finer 2-point rows (only-1st, only-2nd, only-3rd-that-qualifies) and the
-// cross-group "best third" qualification are intentionally simplified here:
-//
-//	7  exact order 1-2-3-4
-//	4  positions 1 and 2 exactly right (3rd/4th differ)
-//	3  at least one position exactly right (but not enough for 4 or 7)
-//	1  no position right
+//	7  todas las posiciones en orden correcto
+//	4  1er y 2do puesto en orden correcto
+//	3  1er, 2do y 3er puesto acertados (en cualquier orden)
+//	2  acierta al menos un clasificado en su posición correspondiente
+//	1  no cumple ninguna de las anteriores
 //
 // A group with no recorded prediction must be guarded by the caller; this
 // function always assumes a real attempt was derived.
@@ -30,10 +26,25 @@ func ScoreGroupPositions(pred, real GroupOrder) int {
 	if pred[0] == real[0] && pred[1] == real[1] {
 		return 4
 	}
-	for i := range pred {
+	if sameTopThree(pred, real) {
+		return 3
+	}
+	for i := 0; i < 3; i++ {
 		if pred[i] == real[i] {
-			return 3
+			return 2
 		}
 	}
 	return 1
+}
+
+// sameTopThree reports whether the predicted top three (qualifiers) are the
+// same set of teams as the real top three, regardless of internal order.
+func sameTopThree(pred, real GroupOrder) bool {
+	seen := map[int]bool{real[0]: true, real[1]: true, real[2]: true}
+	for i := 0; i < 3; i++ {
+		if !seen[pred[i]] {
+			return false
+		}
+	}
+	return true
 }

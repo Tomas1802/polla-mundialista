@@ -32,6 +32,16 @@ export default function Marcadores({ cardId, cards = [], onCardChange }) {
     load()
   }, [load])
 
+  // While a match is live the real score can change (incl. a goal disallowed by
+  // VAR). The backend re-syncs every few minutes, so poll to refresh the open
+  // view; otherwise it would keep showing a frozen snapshot from page load.
+  useEffect(() => {
+    const hasLive = data?.matches?.some((m) => m.status === 'IN_PLAY' || m.status === 'PAUSED')
+    if (!hasLive) return
+    const id = setInterval(load, 60_000)
+    return () => clearInterval(id)
+  }, [data, load])
+
   return (
     <div className="marcadores">
       <header className="mk-header">

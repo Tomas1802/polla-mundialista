@@ -20,10 +20,22 @@ export default function Ranking() {
     return <p className="empty">El ranking aparecerá cuando se carguen los cartones y se jueguen partidos.</p>
   }
 
+  // The podium shows the top 3 distinct people (a player's best card only), so
+  // the same person never appears twice — even though the list below keeps every
+  // board in its true per-card position.
+  const podiumTop = []
+  const seenPlayers = new Set()
+  for (const e of ranking) {
+    if (seenPlayers.has(e.playerId)) continue
+    seenPlayers.add(e.playerId)
+    podiumTop.push(e)
+    if (podiumTop.length === 3) break
+  }
+
   return (
     <div className="ranking">
       <h2 className="ranking-title">Ranking por cartón</h2>
-      <Podium top={ranking.slice(0, 3)} mePlayerId={mePlayerId} />
+      <Podium top={podiumTop} mePlayerId={mePlayerId} />
       <p className="tablas-intro">Toca un cartón para ver sus marcadores y los puntos de cada partido.</p>
       <ol className="ranking-list">
         {ranking.map((e) => (
@@ -56,7 +68,6 @@ function PodiumSlot({ entry, place, mePlayerId }) {
     <div className={`podium-slot podium-${place}` + (isMe ? ' me' : '')}>
       <div className="podium-medal" aria-hidden="true">{MEDALS[place]}</div>
       <div className="podium-name">{entry.playerName}</div>
-      <div className="podium-card">{entry.cardLabel}</div>
       <div className="podium-bar">
         <span className="podium-pts">{entry.points}</span>
         <span className="podium-place">{place}°</span>

@@ -142,13 +142,13 @@ export default function MatchCard({ match, cardId }) {
       {hasReal && (
         <div className="match-result">
           <div className="result-compare">
-            <span className="result-line">
-              <span className="result-tag">Tu pronóstico</span>
-              <strong>{(home ?? '–')}–{(away ?? '–')}</strong>
-            </span>
-            <span className={'result-line' + (live ? ' result-live' : stale ? ' result-pending' : '')}>
+            <span className={'result-line result-real' + (live ? ' result-live' : stale ? ' result-pending' : '')}>
               <span className="result-tag">{realLabel}</span>
               <strong>{match.scoreHome}–{match.scoreAway}</strong>
+            </span>
+            <span className="result-line result-pred">
+              <span className="result-tag">Tu pronóstico</span>
+              <strong>{(home ?? '–')}–{(away ?? '–')}</strong>
             </span>
           </div>
           {match.points != null && (

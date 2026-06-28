@@ -362,10 +362,23 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
   margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line);
   display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
 }
-.result-compare { display: flex; flex-direction: column; gap: 0.3rem; }
+.result-compare { display: flex; flex-direction: column; gap: 0.35rem; }
 .result-line { display: flex; align-items: baseline; gap: 0.55rem; }
-.result-line strong { font-size: 1.18rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.result-line strong { font-weight: 800; font-variant-numeric: tabular-nums; }
 .result-tag { color: var(--muted); font-weight: 600; font-size: 0.84rem; min-width: 9ch; }
+
+/* Real result is the one people scan for: bigger, highlighted, on top.
+   The prediction sits below, smaller and muted, so the two never get confused. */
+.result-real {
+  align-items: center;
+  background: var(--surface-2, rgba(0, 0, 0, 0.04));
+  border-radius: 10px; padding: 0.35rem 0.6rem; margin: -0.1rem -0.2rem 0;
+}
+.result-real .result-tag { color: var(--ink); font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; font-size: 0.78rem; }
+.result-real strong { font-size: 1.85rem; line-height: 1; }
+.result-pred { padding: 0 0.2rem; }
+.result-pred .result-tag { font-size: 0.8rem; }
+.result-pred strong { font-size: 1.02rem; font-weight: 700; color: var(--muted); }
 .result-line.result-live .result-tag {
   color: var(--live); font-weight: 800;
   display: flex; align-items: center; gap: 0.35rem;

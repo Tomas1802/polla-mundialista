@@ -104,6 +104,21 @@ func (d *DB) HasUnsettledMatches(ctx context.Context, now time.Time) (bool, erro
 	return exists, err
 }
 
+// AwaitingNextStage reports whether any fixture kicked off within [now-window,
+// now]. A recent match with no upcoming fixture in the cache means a phase just
+// ended and the next round may have since been published by the API, so the
+// sync should refresh. The window bounds this so a finished tournament (no new
+// fixtures ever coming) stops polling once the final is more than `window` old.
+func (d *DB) AwaitingNextStage(ctx context.Context, now time.Time, window time.Duration) (bool, error) {
+	var ok bool
+	err := d.Pool.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM matches
+			WHERE utc_date >= $1 AND utc_date <= $2
+		)`, now.Add(-window), now).Scan(&ok)
+	return ok, err
+}
+
 // MatchResultRow is a slim view of a match's official result for the admin
 // result editor (includes whether the result was entered manually).
 type MatchResultRow struct {

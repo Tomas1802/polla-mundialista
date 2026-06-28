@@ -81,6 +81,16 @@ func (s *Service) Tick(ctx context.Context) error {
 	if state.NextMatchUTC != nil && !now.Before(*state.NextMatchUTC) {
 		return s.FullSync(ctx)
 	}
+	// Between stages the next-match pointer is empty: when a phase ends the API
+	// has no upcoming fixture yet (e.g. the knockout bracket is published only
+	// once the groups finish). Re-sync on the short gap so the new round's
+	// fixtures appear promptly, bounded to a few days past the last match so a
+	// finished tournament doesn't poll forever (the daily sync still covers it).
+	if state.NextMatchUTC == nil && now.Sub(*state.LastFullSyncAt) >= minPollGap {
+		if pending, err := s.store.AwaitingNextStage(ctx, now, 3*24*time.Hour); err == nil && pending {
+			return s.FullSync(ctx)
+		}
+	}
 	// Any match whose kickoff has passed but isn't FINISHED yet (e.g. the service
 	// was asleep when it ended): keep polling until its result lands, regardless
 	// of how long ago it kicked off. Bounded by minPollGap to limit API calls.

@@ -16,7 +16,8 @@
       "Bash(cat .env.example)",
       "PowerShell($d=\"C:\\\\Users\\\\tparr\\\\Documents\\\\TOMAS\\\\PERSONAL\\\\POLLA\"; git -C $d log --oneline -3; Write-Output \"---- files in last commit ----\"; git -C $d show --stat --oneline HEAD | Select-Object -First 20)",
       "Bash(go test *)",
-      "Bash(go build *)"
+      "Bash(go build *)",
+      "Bash(curl *)"
     ]
   }
 }

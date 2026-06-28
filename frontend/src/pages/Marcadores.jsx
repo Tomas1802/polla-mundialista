@@ -3,7 +3,7 @@ import { api } from '../api.js'
 import CardSelector from '../components/CardSelector.jsx'
 import GroupMatches from '../components/GroupMatches.jsx'
 import GroupTables from '../components/GroupTables.jsx'
-import Bracket from '../components/Bracket.jsx'
+import KnockoutMatches from '../components/KnockoutMatches.jsx'
 
 // Marcadores is the unified play view. A compact sticky header keeps the key
 // controls in view even after the list auto-scrolls to the current match:
@@ -15,7 +15,7 @@ import Bracket from '../components/Bracket.jsx'
 export default function Marcadores({ cardId, cards = [], onCardChange }) {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
-  const [phase, setPhase] = useState('grupos') // 'grupos' | 'eliminatoria'
+  const [phase, setPhase] = useState('eliminatoria') // 'grupos' | 'eliminatoria'
   const [groupView, setGroupView] = useState('marcadores') // 'marcadores' | 'tablas'
 
   const load = useCallback(async () => {
@@ -98,7 +98,7 @@ export default function Marcadores({ cardId, cards = [], onCardChange }) {
           : <GroupTables cardId={cardId} />
       )}
 
-      {!error && data && phase === 'eliminatoria' && <Bracket matches={data.matches} />}
+      {!error && data && phase === 'eliminatoria' && <KnockoutMatches data={data} cardId={cardId} />}
     </div>
   )
 }

@@ -32,7 +32,11 @@ export default function Reglas() {
 
         <h4>Tablas de grupo</h4>
         <ul>
-          <li><b>7</b> — orden 1-2-3-4 exacto · <b>4</b> — 1º y 2º correctos · <b>3</b> — al menos una posición correcta · <b>1</b> — ninguna</li>
+          <li><b>7</b> — orden 1-2-3-4 exacto</li>
+          <li><b>4</b> — 1º y 2º en orden correcto</li>
+          <li><b>3</b> — los 3 clasificados correctos (en cualquier orden)</li>
+          <li><b>2</b> — al menos un clasificado en su posición correcta</li>
+          <li><b>1</b> — ninguna de las anteriores</li>
         </ul>
 
         <p className="reglas-note">En caso de empate en el ranking, desempata quien tenga más marcadores exactos.</p>

@@ -35,13 +35,26 @@ func toResult(m model.Match) scoring.Result {
 	if m.ScoreAway != nil {
 		r.Away = *m.ScoreAway
 	}
+	// The winner column holds two vocabularies: football-data sync writes
+	// HOME_TEAM/AWAY_TEAM, the admin's manual entry writes HOME_WIN/AWAY_WIN.
+	// Accept both.
 	switch m.Winner {
-	case "HOME_WIN":
+	case "HOME_WIN", "HOME_TEAM":
 		r.Winner = scoring.SideHome
-	case "AWAY_WIN":
+	case "AWAY_WIN", "AWAY_TEAM":
 		r.Winner = scoring.SideAway
 	default:
 		r.Winner = scoring.SideNone
+	}
+	// Safety net: a decisive score with no usable winner string (unknown value,
+	// empty, or DRAW that actually has a winning side) implies the winner. A true
+	// draw scoreline keeps SideNone — penalties are carried by the winner string.
+	if r.Winner == scoring.SideNone && m.ScoreHome != nil && m.ScoreAway != nil {
+		if r.Home > r.Away {
+			r.Winner = scoring.SideHome
+		} else if r.Away > r.Home {
+			r.Winner = scoring.SideAway
+		}
 	}
 	return r
 }

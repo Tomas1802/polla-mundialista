@@ -60,13 +60,73 @@ type apiTeam struct {
 	Crest     *string `json:"crest"`
 }
 
+type scorePair struct {
+	Home *int `json:"home"`
+	Away *int `json:"away"`
+}
+
 type apiScore struct {
-	Winner   *string `json:"winner"`
-	Duration *string `json:"duration"`
-	FullTime struct {
-		Home *int `json:"home"`
-		Away *int `json:"away"`
-	} `json:"fullTime"`
+	Winner      *string   `json:"winner"`
+	Duration    *string   `json:"duration"`
+	FullTime    scorePair `json:"fullTime"`
+	RegularTime scorePair `json:"regularTime"`
+	ExtraTime   scorePair `json:"extraTime"`
+	Penalties   scorePair `json:"penalties"`
+}
+
+// isShootout reports whether the match was decided by a penalty shootout. In
+// that case fullTime folds the shootout into the scoreline (e.g. 1–1 in 90'
+// becomes 6–5), which is not the marcador our reglamento scores.
+func (s apiScore) isShootout() bool {
+	return s.Duration != nil && *s.Duration == "PENALTY_SHOOTOUT"
+}
+
+// marcador returns the official result our rules score: the score after regular
+// (+ extra) time. For shootouts fullTime includes the shootout, so we rebuild
+// from regularTime + extraTime; otherwise fullTime already excludes penalties.
+func (s apiScore) marcador() (*int, *int) {
+	if s.isShootout() && s.RegularTime.Home != nil && s.RegularTime.Away != nil {
+		h := *s.RegularTime.Home + valOr0(s.ExtraTime.Home)
+		a := *s.RegularTime.Away + valOr0(s.ExtraTime.Away)
+		return &h, &a
+	}
+	return s.FullTime.Home, s.FullTime.Away
+}
+
+// resolveWinner returns the advancing side in football-data's HOME_TEAM/AWAY_TEAM
+// vocabulary. After a shootout the marcador is a draw, so the scoreline can no
+// longer imply the winner — we read it from the shootout, preferring the
+// explicit winner field, then the penalties tally, then the fullTime aggregate
+// (which always favours the team that advanced).
+func (s apiScore) resolveWinner() string {
+	if s.Winner != nil && *s.Winner != "" {
+		return *s.Winner
+	}
+	if s.isShootout() {
+		if w := sideOf(s.Penalties); w != "" {
+			return w
+		}
+		return sideOf(s.FullTime)
+	}
+	return ""
+}
+
+// sideOf returns HOME_TEAM/AWAY_TEAM for a decisive pair, or "" for a tie/unknown.
+func sideOf(p scorePair) string {
+	if p.Home == nil || p.Away == nil || *p.Home == *p.Away {
+		return ""
+	}
+	if *p.Home > *p.Away {
+		return "HOME_TEAM"
+	}
+	return "AWAY_TEAM"
+}
+
+func valOr0(p *int) int {
+	if p == nil {
+		return 0
+	}
+	return *p
 }
 
 // Matches fetches all matches for the competition and returns them as domain
@@ -123,11 +183,10 @@ func (am apiMatch) toModel() model.Match {
 		AwayTeamID:   am.AwayTeam.ID,
 		HomeTeamName: teamLabel(am.HomeTeam),
 		AwayTeamName: teamLabel(am.AwayTeam),
-		ScoreHome:    am.Score.FullTime.Home,
-		ScoreAway:    am.Score.FullTime.Away,
-		Winner:       deref(am.Score.Winner),
+		Winner:       am.Score.resolveWinner(),
 		Duration:     deref(am.Score.Duration),
 	}
+	m.ScoreHome, m.ScoreAway = am.Score.marcador()
 	if am.Matchday != nil {
 		m.Matchday = *am.Matchday
 	}

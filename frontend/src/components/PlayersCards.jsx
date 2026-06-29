@@ -87,7 +87,7 @@ function CartonBlock({ card, editMode }) {
     if (e.target.open && matches === null) {
       try {
         const d = await api.matches(card.id)
-        setMatches((d.matches || []).filter((m) => m.stage === 'GROUP_STAGE'))
+        setMatches(d.matches || [])
       } catch (err) {
         setError(err.message)
       }
@@ -130,7 +130,12 @@ function ViewRow({ match }) {
 function FixRow({ cardId, match }) {
   const [home, setHome] = useState(match.prediction?.home ?? '')
   const [away, setAway] = useState(match.prediction?.away ?? '')
+  const [pen, setPen] = useState(match.prediction?.penaltyWinner ?? '')
   const [status, setStatus] = useState('')
+
+  // Knockout draws need a penalty winner to decide who advances.
+  const isDrawPred = home !== '' && away !== '' && Number(home) === Number(away)
+  const showPenalty = match.knockout && isDrawPred
 
   async function save() {
     setStatus('saving')
@@ -138,7 +143,7 @@ function FixRow({ cardId, match }) {
       await api.adminEditPrediction(cardId, match.id, {
         home: home === '' ? null : Number(home),
         away: away === '' ? null : Number(away),
-        penaltyWinner: '',
+        penaltyWinner: showPenalty ? pen : '',
       })
       setStatus('saved')
       setTimeout(() => setStatus((s) => (s === 'saved' ? '' : s)), 1500)
@@ -155,6 +160,13 @@ function FixRow({ cardId, match }) {
       <span className="admin-dash">–</span>
       <input className="admin-score" type="number" min="0" max="99" value={away}
         onChange={(e) => setAway(e.target.value)} />
+      {showPenalty && (
+        <select className="admin-pen" value={pen} onChange={(e) => setPen(e.target.value)}>
+          <option value="">Penales: —</option>
+          <option value="HOME">Gana {match.homeTeamName}</option>
+          <option value="AWAY">Gana {match.awayTeamName}</option>
+        </select>
+      )}
       <button className="fix-save" onClick={save} disabled={status === 'saving'}>Guardar</button>
       {match.status === 'FINISHED' && (
         <span className="fix-real">real {match.scoreHome}–{match.scoreAway}</span>

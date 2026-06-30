@@ -96,13 +96,20 @@ func ScoreKnockoutMatchExplained(p Prediction, r Result, t KnockoutPoints) Outco
 		return Outcome{0, RuleNone}
 	}
 	exact := p.Home == r.Home && p.Away == r.Away
+	// Same goals, teams swapped (predicted 1-2, result 2-1): the marcador is
+	// right but the winner is wrong, so it scores the same tier as an exact
+	// score with the wrong team advancing. A reversed draw equals the exact
+	// score and is already caught above.
+	reversed := !r.isDraw() && p.Home == r.Away && p.Away == r.Home
 	correctWinner := r.Winner != SideNone && p.winner() == r.Winner
 	switch {
 	case exact && correctWinner:
 		return Outcome{t.ExactAndWinner, RuleExactAdv}
 	case exact && !correctWinner:
 		return Outcome{t.ExactNotWinner, RuleExactNoAdv}
-	case !exact && correctWinner:
+	case reversed:
+		return Outcome{t.ExactNotWinner, RuleReversed}
+	case correctWinner:
 		return Outcome{t.WinnerNotExact, RuleAdv}
 	default:
 		return Outcome{t.Nothing, RuleWrong}

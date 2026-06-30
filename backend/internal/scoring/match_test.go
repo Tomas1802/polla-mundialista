@@ -49,6 +49,7 @@ func TestScoreKnockoutMatch(t *testing.T) {
 		{"exact draw correct penalty", draw(1, 1, SideHome), Result{Home: 1, Away: 1, Winner: SideHome}, KnockoutTiers, 7},
 		{"exact draw wrong penalty", draw(1, 1, SideAway), Result{Home: 1, Away: 1, Winner: SideHome}, KnockoutTiers, 5},
 		{"exact draw no penalty pick", filled(1, 1), Result{Home: 1, Away: 1, Winner: SideHome}, KnockoutTiers, 5},
+		{"reversed score", filled(1, 2), Result{Home: 2, Away: 1, Winner: SideHome}, KnockoutTiers, 5},
 		{"winner right wrong score", filled(3, 0), Result{Home: 2, Away: 1, Winner: SideHome}, KnockoutTiers, 3},
 		{"nothing right", filled(2, 1), Result{Home: 0, Away: 3, Winner: SideAway}, KnockoutTiers, 1},
 		{"final exact and winner", filled(1, 0), Result{Home: 1, Away: 0, Winner: SideHome}, FinalTiers, 10},

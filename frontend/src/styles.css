@@ -358,6 +358,17 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
 .save-error { color: var(--danger); }
 .save-saving { color: var(--muted); }
 
+.confirm-btn {
+  width: 100%; margin-top: 0.7rem; padding: 0.7rem;
+  border: none; border-radius: var(--radius-sm);
+  background: var(--green); color: #fff;
+  font-size: 1rem; font-weight: 800; cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.confirm-btn:active { transform: scale(0.99); }
+.confirm-btn:disabled { opacity: 0.6; cursor: default; }
+.confirm-error { background: var(--danger); }
+
 .match-result {
   margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line);
   display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;

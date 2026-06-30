@@ -367,7 +367,6 @@ h1, h2, h3, h4 { letter-spacing: -0.01em; }
 }
 .confirm-btn:active { transform: scale(0.99); }
 .confirm-btn:disabled { opacity: 0.6; cursor: default; }
-.confirm-error { background: var(--danger); }
 
 .match-result {
   margin-top: 0.7rem; padding-top: 0.7rem; border-top: 1px solid var(--line);

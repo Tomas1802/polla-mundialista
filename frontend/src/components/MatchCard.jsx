@@ -40,68 +40,37 @@ export default function MatchCard({ match, cardId }) {
   const [away, setAway] = useState(initial.away ?? null)
   const [pen, setPen] = useState(initial.penaltyWinner ?? '')
   const [status, setStatus] = useState('')
-  const [dirty, setDirty] = useState(!!pending)
 
-  // syncedRef = last value the server confirmed; draftRef = latest local edit.
-  // Comparing them tells us whether there's anything to push, and guards the
-  // success path against an out-of-order response clearing a newer edit.
-  const syncedRef = useRef({ home: server.home ?? null, away: server.away ?? null, pen: server.penaltyWinner ?? '' })
+  // draftRef = latest local edit; guards the success path against an
+  // out-of-order response clearing a newer edit.
   const draftRef = useRef({ home: home, away: away, pen: pen })
-  const timerRef = useRef(null)
 
-  async function sync() {
-    clearTimeout(timerRef.current)
-    const snap = draftRef.current
-    if (eq(snap, syncedRef.current)) {
-      setDirty(false)
-      return
-    }
+  // Save the given marcador: mirror it to localStorage at once (never lost),
+  // then push to the server; clear the local backup only once it confirms.
+  async function save(nh, na, np) {
+    const snap = { home: nh, away: na, pen: np }
+    draftRef.current = snap
+    setPending(cardId, match.id, { home: nh, away: na, penaltyWinner: np })
     setStatus('saving')
     try {
-      await api.putPrediction(cardId, match.id, { home: snap.home, away: snap.away, penaltyWinner: snap.pen })
-      syncedRef.current = snap
-      // Clear the local backup only if the player hasn't edited again while
-      // this request was in flight; otherwise the newer draft stays pending.
+      await api.putPrediction(cardId, match.id, { home: nh, away: na, penaltyWinner: np })
+      // Only clear if the player hasn't edited again while this was in flight.
       if (eq(draftRef.current, snap)) {
         clearPending(cardId, match.id)
-        setDirty(false)
         setStatus('saved')
         setTimeout(() => setStatus((s) => (s === 'saved' ? '' : s)), 1600)
       }
     } catch {
-      setStatus('error') // local backup kept; confirm button offers a retry
+      setStatus('error') // local backup kept; the confirm button retries
     }
   }
 
   // Flush any leftover unsynced draft when the card mounts (e.g. the player
-  // reopened the app after a save failed), and cancel pending timers on unmount.
+  // reopened the app after a save failed offline).
   useEffect(() => {
-    if (dirty) sync()
-    return () => clearTimeout(timerRef.current)
+    if (pending) save(initial.home ?? null, initial.away ?? null, initial.penaltyWinner ?? '')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // Apply an edit: update the display, persist locally at once (never lost),
-  // then optimistically auto-save after a short debounce that collapses rapid
-  // taps into one request and keeps writes in order.
-  function commit(nh, na, np) {
-    setHome(nh)
-    setAway(na)
-    setPen(np)
-    const draft = { home: nh, away: na, pen: np }
-    draftRef.current = draft
-    if (eq(draft, syncedRef.current)) {
-      clearPending(cardId, match.id)
-      setDirty(false)
-      setStatus('')
-      clearTimeout(timerRef.current)
-      return
-    }
-    setPending(cardId, match.id, { home: nh, away: na, penaltyWinner: np })
-    setDirty(true)
-    clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(sync, 800)
-  }
 
   const finished = match.status === 'FINISHED'
   const rawLive = match.status === 'IN_PLAY' || match.status === 'PAUSED'
@@ -122,12 +91,21 @@ export default function MatchCard({ match, cardId }) {
 
   function step(side, delta) {
     if (!editable) return
-    if (side === 'home') commit(clamp((home ?? 0) + delta), away ?? 0, pen)
-    else commit(home ?? 0, clamp((away ?? 0) + delta), pen)
+    if (side === 'home') {
+      const v = clamp((home ?? 0) + delta)
+      setHome(v)
+      save(v, away ?? 0, pen)
+    } else {
+      const v = clamp((away ?? 0) + delta)
+      setAway(v)
+      save(home ?? 0, v, pen)
+    }
   }
 
   function choosePenalty(side) {
-    commit(home, away, pen === side ? '' : side)
+    const next = pen === side ? '' : side
+    setPen(next)
+    save(home, away, next)
   }
 
   return (
@@ -181,20 +159,19 @@ export default function MatchCard({ match, cardId }) {
         </div>
       )}
 
-      {editable && (dirty || status === 'saving' || status === 'error') && (
-        <button
-          className={'confirm-btn' + (status === 'error' ? ' confirm-error' : '')}
-          onClick={sync}
-          disabled={status === 'saving'}
-        >
-          {status === 'saving'
-            ? 'Guardando…'
-            : status === 'error'
-              ? 'No se guardó — reintentar'
-              : 'Confirmar marcador'}
-        </button>
+      {editable && (
+        <>
+          <button
+            className="confirm-btn"
+            onClick={() => save(home ?? 0, away ?? 0, pen)}
+            disabled={status === 'saving'}
+          >
+            {status === 'saving' ? 'Guardando…' : 'Confirmar marcador'}
+          </button>
+          {status === 'saved' && <p className="save-status save-saved">Guardado ✓</p>}
+          {status === 'error' && <p className="save-status save-error">No se pudo guardar — toca Confirmar</p>}
+        </>
       )}
-      {editable && status === 'saved' && <p className="save-status save-saved">Guardado ✓</p>}
 
       {hasReal && (
         <div className="match-result">
